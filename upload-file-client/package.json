@@ -9,15 +9,24 @@
     "preview": "vite preview",
     "eslint": "eslint src/**/*.{vue,ts}",
     "eslint:fix": "eslint src/**/*.{vue,ts} --fix",
-    "format": "prettier --write \"src/**/*.{html,vue,ts}\"",
+    "prettier-format": "prettier --write \"src/**/*.{html,vue,ts}\"",
     "stylelint": "stylelint \"src/**/*.{css,scss,sass,vue}\"",
     "stylelint:fix": "stylelint \"src/**/*.{css,scss,sass,vue}\" --fix",
-    "prepare": "husky install"
+    "lint:lint-staged": "lint-staged",
+    "prepare": "cd .. && husky upload-file-client/.husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,vue,ts,tsx}": [
+      "pnpm run eslint",
+      "pnpm run prettier-format"
+    ]
   },
   "dependencies": {
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.2.2",
+    "@commitlint/config-conventional": "^19.2.2",
     "@eslint/js": "^9.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "eslint": "^9.0.0",
