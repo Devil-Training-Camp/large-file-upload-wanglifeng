@@ -2,4 +2,4 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # 格式化并提交代码
-cd upload-file-client && pnpm run  lint:lint-staged
+cd upload-file-client && pnpm run lint:lint-staged
