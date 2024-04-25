@@ -1,19 +1,38 @@
 {
   "name": "large-file-upload-wanglifeng",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "elint": "eslint ./ --cache --quiet",
+    "prettier-format": "prettier --config .prettierrc.cjs \"src/**/*.{vue,js,ts}\" --write",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,jsx,vue,ts,tsx}": [
+      "pnpm eslint",
+      "pnpm prettier-format"
+    ]
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "element-plus": "^2.7.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.2"
+  },
   "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "@eslint/js": "^9.1.1",
     "@types/eslint": "^8.56.10",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
     "@typescript-eslint/parser": "^7.7.1",
+    "@vitejs/plugin-vue": "^5.0.4",
     "eslint": "^9.1.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^9.1.0",
@@ -22,8 +41,11 @@
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-vue": "^9.25.0",
     "globals": "^15.0.0",
+    "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.7.1"
+    "typescript-eslint": "^7.7.1",
+    "vite": "^5.2.0",
+    "vue-tsc": "^2.0.6"
   }
 }
