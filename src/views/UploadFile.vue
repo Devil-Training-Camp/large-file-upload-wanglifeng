@@ -4,12 +4,14 @@
       <div class="upload-com">
         <el-upload
           :on-change="handleChange"
-          :auto-upload="false"
+          drag
           :action="''"
-          :show-file-list="false"
           multiple
+          :auto-upload="false"
+          :show-file-list="false"
         >
-          <el-button type="primary">点击上传</el-button>
+          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+          <div class="el-upload__text">将文件放到这里或 <em>选择文件</em></div>
         </el-upload>
       </div>
     </div>

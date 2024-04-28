@@ -23,8 +23,8 @@ self.onmessage = async (event) => {
             let percent = Math.round((event.loaded / event.total) * 100);
             console.log(`正在读取文件${percent}%...`);
           };
-          reader.onerror = (event) => {
-            reject("文件读取错误");
+          reader.onerror = (err) => {
+            reject(err);
           };
         }),
     ),
