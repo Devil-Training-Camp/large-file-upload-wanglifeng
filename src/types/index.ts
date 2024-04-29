@@ -8,4 +8,6 @@ export interface Part {
   filename?: string;
   //   切片名称
   chunkName?: string;
+  // 上传进度
+  percent?:number;
 }
