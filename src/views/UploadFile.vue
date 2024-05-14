@@ -16,23 +16,14 @@
       </div>
       <div class="btn-list">
         <div class="btns">
-          <el-button
-            type="primary"
-            @click="handleUpload"
-            v-if="uploadStatus == UploadStatus.INIT"
-            >上传</el-button
-          >
-          <el-button
-            type="primary"
-            v-else-if="uploadStatus == UploadStatus.UPLOADING"
-            >暂停</el-button
-          >
-          <el-button type="primary" v-if="uploadStatus == UploadStatus.PAUSE"
-            >继续</el-button
-          >
+          <el-button type="primary" @click="handleUpload">上传</el-button>
+          <el-button type="warning" @click="handlePause">{{
+            uploaded ? "暂停" : "继续"
+          }}</el-button>
         </div>
       </div>
     </div>
+    <div class="file-wrapper"></div>
   </div>
 </template>
 
@@ -41,20 +32,16 @@ import { ref } from "vue";
 import type { UploadFile, UploadProps } from "element-plus";
 import { CHUNK_SIZE } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
-import { Part } from "@/types";
+import { Part, UploadPartControllerParams, UploadPartParams } from "@/types";
 import Worker from "../utils/hash_worker.ts?worker";
+import { mergePart, uploadPart, verify } from "@/service/file";
+import Scheduler from "../utils/scheduler";
 
 const file = ref<UploadFile | null>(null);
 const upload = ref<boolean>(true);
+const uploaded = ref<boolean>(false);
 const hash = ref<string>("");
-
-// 定义文件上传状态
-enum UploadStatus {
-  INIT, //初始态
-  PAUSE, //暂停中
-  UPLOADING, //上传中
-}
-let uploadStatus = UploadStatus.INIT;
+const controllerMap = new Map<number, AbortController>();
 
 // 文件上传事件
 const handleChange: UploadProps["onChange"] = (rawFile) => {
@@ -70,20 +57,75 @@ const handleUpload = async () => {
   let partList: Part[] = createChunks(file.value.raw);
   let fileHash: string = await calculateHash(partList);
   let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
-  let extname = file.value.raw?.slice(lastDotIndex);
+  let extname = file.value.raw?.name.slice(lastDotIndex);
   let filename = `${fileHash}${extname}`;
   partList = partList.map((part, index: number) => ({
     filename, //文件名
-    chunk_name: `${filename}-${index}`, //分块的名称
-    chunk: part.chunk, //代码块
-    size: part.chunk.size, //此代码块的大小
+    chunkName: `${filename}-${index}`, //分块的名称
+    chunk: part.chunk, // 分块
+    size: part.chunk.size, // 分块的大小
+    percent: 0,
   }));
-  await uploadParts(partList, filename);
+
+  const { needUpload } = (await verify({ filename })) as any;
+  if (needUpload) {
+  await uploadParts({
+    partList,
+    filename,
+    partsTotal: partList.length,
+    uploadedPartsCount: 0,
+  });
+  } else {
+    ElMessage.success("秒传成功！");
+  }
 };
 
 // 上传切片
-async function uploadParts(partList: Part[], filename: string) {
-  
+async function uploadParts({
+  partList,
+  filename,
+  partsTotal,
+  uploadedPartsCount,
+  limit = 3,
+}: UploadPartParams) {
+  const scheduler = new Scheduler(limit);
+  for (let i = 0; i < partList.length; i++) {
+    const { chunk } = partList[i];
+    let cName = "";
+    if (partList[i].chunkName) {
+      cName = partList[i].chunkName as string;
+    } else {
+      cName = `${filename}-${partList.indexOf(partList[i])}`;
+    }
+
+    const params = {
+      part: chunk,
+      partName: cName,
+      fileName: filename,
+    } as UploadPartControllerParams;
+
+    const task = async () => {
+      const controller = new AbortController();
+      controllerMap.set(i,controller);
+      const {signal} = controller;
+
+      return await uploadPart(params, onTick, i, signal);
+    };
+    scheduler.add(()=>{
+      return task().then(()=>{
+        uploadedPartsCount++;
+        // 判断切片都上传完成时，进行切片合并
+        if(uploadedPartsCount == partsTotal){
+          async()=>{
+            await mergePart({filename});
+          }
+        }
+      })
+      .catch((err)=>{
+        throw err
+      });
+    });
+  }
 }
 
 // 计算切片hash
@@ -113,6 +155,20 @@ function createChunks(file: any): Part[] {
     current += CHUNK_SIZE;
   }
   return partList;
+}
+
+// 暂停上传/恢复上传
+async function handlePause() {
+  upload.value = !upload.value;
+  if (!upload.value) {
+  } else {
+
+  }
+}
+
+// 上传进度
+function onTick(index:number, percent:number){
+
 }
 </script>
 
