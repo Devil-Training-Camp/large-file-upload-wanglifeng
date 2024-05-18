@@ -14,8 +14,8 @@ export const defineRoutes = (app: Koa) => {
   });
 
   router.post("/api/upload", koaBody({ multipart: true }), uploadController);
-  router.post("/api/merge", koaBody({ multipart: true }), mergeController);
-  router.post("/api/verify", koaBody({ multipart: true }), verifyController);
+  router.post("/api/merge", koaBody(), mergeController);
+  router.post("/api/verify", koaBody(), verifyController);
 
   app.use(router.routes()).use(router.allowedMethods());
 };

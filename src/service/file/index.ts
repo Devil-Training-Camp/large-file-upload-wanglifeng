@@ -42,9 +42,9 @@ export function verify(params: VerifyPartParams) {
   }) as Promise<VerifyPartResponse>;
 }
 
-export function mergePart(params:MergePartsControllerParams){
+export function mergePart(params: MergePartsControllerParams) {
   return myRequest.post({
-    url:'/api/merge',
-    data:params
-  }) as Promise<MergePartsControllerResponse>
+    url: "/api/merge",
+    data: params,
+  }) as Promise<MergePartsControllerResponse>;
 }

@@ -15,6 +15,4 @@ app.use(bodyParser());
 // 异常处理
 app.use(errorCatch());
 
-app.listen(PORT, () => {
-  console.log("server is running on http://localhost:3000");
-});
+app.listen(PORT);

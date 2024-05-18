@@ -8,6 +8,7 @@
   },
   "keywords": [],
   "dependencies": {
+    "fs-extra": "^11.2.0",
     "koa-body": "^6.0.1",
     "koa-bodyparser": "^4.4.1",
     "koa-pino-logger": "^4.0.0",

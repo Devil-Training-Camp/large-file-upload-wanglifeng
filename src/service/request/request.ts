@@ -21,13 +21,9 @@ interface myData<T> {
 }
 
 class MYRequest {
-  config: AxiosRequestConfig;
-  interceptorHooks?: InterceptorHooks;
   instance: AxiosInstance;
 
   constructor(options: MYRequestConfig) {
-    this.config = options;
-    this.interceptorHooks = options.interceptorHooks;
     this.instance = axios.create(options);
 
     this.instance.interceptors.request.use(
@@ -51,6 +47,7 @@ class MYRequest {
 
   request<T = any>(config: MYRequestConfig): Promise<T> {
     return new Promise((resolve, reject) => {
+      debugger;
       this.instance
         .request<any, myData<T>>(config)
         .then((res) => {
@@ -67,6 +64,7 @@ class MYRequest {
   }
 
   post<T = any>(config: MYRequestConfig): Promise<T> {
+    debugger;
     return this.request({ ...config, method: "POST" });
   }
 
