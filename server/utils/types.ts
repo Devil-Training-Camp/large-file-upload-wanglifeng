@@ -21,7 +21,7 @@ export interface UploadPartControllerParams {
   // 切片名称
   partName: string;
   // 文件名称
-  fileName: string;
+  filename: string;
 }
 
 export type UploadPartControllerResponse = Response<{

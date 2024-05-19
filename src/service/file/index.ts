@@ -14,11 +14,11 @@ export function uploadPart(
   index: number,
   signal?: AbortSignal,
 ) {
-  const { part, partName, fileName } = params;
+  const { part, partName, filename } = params;
   const formData = new FormData();
   formData.append("part", part);
   formData.append("partName", partName);
-  formData.append("fileName", fileName);
+  formData.append("filename", filename);
 
   return myRequest.post({
     url: "/api/upload",

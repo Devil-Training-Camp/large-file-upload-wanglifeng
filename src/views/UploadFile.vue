@@ -69,12 +69,12 @@ const handleUpload = async () => {
 
   const { needUpload } = (await verify({ filename })) as any;
   if (needUpload) {
-  await uploadParts({
-    partList,
-    filename,
-    partsTotal: partList.length,
-    uploadedPartsCount: 0,
-  });
+    await uploadParts({
+      partList,
+      filename,
+      partsTotal: partList.length,
+      uploadedPartsCount: 0,
+    });
   } else {
     ElMessage.success("秒传成功！");
   }
@@ -101,29 +101,30 @@ async function uploadParts({
     const params = {
       part: chunk,
       partName: cName,
-      fileName: filename,
+      filename: filename,
     } as UploadPartControllerParams;
 
     const task = async () => {
       const controller = new AbortController();
-      controllerMap.set(i,controller);
-      const {signal} = controller;
+      controllerMap.set(i, controller);
+      const { signal } = controller;
 
       return await uploadPart(params, onTick, i, signal);
     };
-    scheduler.add(()=>{
-      return task().then(()=>{
-        uploadedPartsCount++;
-        // 判断切片都上传完成时，进行切片合并
-        if(uploadedPartsCount == partsTotal){
-          async()=>{
-            await mergePart({filename});
+    scheduler.add(() => {
+      return task()
+        .then(() => {
+          uploadedPartsCount++;
+          // 判断切片都上传完成时，进行切片合并
+          if (uploadedPartsCount == partsTotal) {
+            async () => {
+              await mergePart({ filename });
+            };
           }
-        }
-      })
-      .catch((err)=>{
-        throw err
-      });
+        })
+        .catch((err) => {
+          throw err;
+        });
     });
   }
 }
@@ -162,13 +163,12 @@ async function handlePause() {
   upload.value = !upload.value;
   if (!upload.value) {
   } else {
-
   }
 }
 
 // 上传进度
-function onTick(index:number, percent:number){
-
+function onTick(index: number, percent: number) {
+  
 }
 </script>
 

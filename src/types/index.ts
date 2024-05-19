@@ -48,7 +48,7 @@ export interface UploadPartControllerParams {
   // 切片名称
   partName: string;
   // 文件名称
-  fileName: string;
+  filename: string;
 }
 
 export type UploadPartControllerResponse = Response<{
@@ -64,4 +64,4 @@ export interface MergePartsControllerParams {
 
 export type MergePartsControllerResponse = Response<{
   filename: string;
-}>
+}>;
