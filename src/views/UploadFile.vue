@@ -18,7 +18,7 @@
         <div class="btns">
           <el-button type="primary" @click="handleUpload">上传</el-button>
           <el-button type="warning" @click="handlePause">{{
-            uploaded ? "暂停" : "继续"
+            upload ? "暂停" : "继续"
           }}</el-button>
         </div>
       </div>
@@ -38,10 +38,12 @@ import { mergePart, uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
 
 const file = ref<UploadFile | null>(null);
+const fileParts = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const uploaded = ref<boolean>(false);
 const hash = ref<string>("");
 const controllerMap = new Map<number, AbortController>();
+let filename = "";
 
 // 文件上传事件
 const handleChange: UploadProps["onChange"] = (rawFile) => {
@@ -58,7 +60,7 @@ const handleUpload = async () => {
   let fileHash: string = await calculateHash(partList);
   let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
   let extname = file.value.raw?.name.slice(lastDotIndex);
-  let filename = `${fileHash}${extname}`;
+  filename = `${fileHash}${extname}`;
   partList = partList.map((part, index: number) => ({
     filename, //文件名
     chunkName: `${filename}-${index}`, //分块的名称
@@ -67,6 +69,7 @@ const handleUpload = async () => {
     percent: 0,
   }));
 
+  fileParts.value = partList;
   const { needUpload } = (await verify({ filename })) as any;
   if (needUpload) {
     await uploadParts({
@@ -158,18 +161,25 @@ function createChunks(file: any): Part[] {
   return partList;
 }
 
-// 暂停上传/恢复上传
 async function handlePause() {
   upload.value = !upload.value;
   if (!upload.value) {
+    controllerMap.forEach((controller, index) => {
+      controller.abort();
+    });
+    controllerMap.clear();
   } else {
+    await uploadParts({
+      partList: fileParts.value,
+      filename: filename,
+      partsTotal: fileParts.value.length,
+      uploadedPartsCount: 0,
+    });
   }
 }
 
 // 上传进度
-function onTick(index: number, percent: number) {
-  
-}
+function onTick(index: number, percent: number) {}
 </script>
 
 <style lang="scss" scoped>
