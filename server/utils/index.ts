@@ -9,6 +9,7 @@ export const isPositiveInter = (s) =>
 export const isUndefined = (s) => typeof s === "undefined";
 
 // 提取后缀名
+// 这个倒是没有封装的必要
 export const extractExt = (filename: string): string => path.extname(filename);
 
 export const TEMP_DIR = path.resolve(__dirname, "temp");

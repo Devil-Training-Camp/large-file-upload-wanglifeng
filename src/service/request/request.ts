@@ -2,7 +2,9 @@ import axios from "axios";
 import type { AxiosRequestConfig, AxiosInstance, AxiosResponse } from "axios";
 
 interface InterceptorHooks {
+  // 哈？这些好像可以通过 typeof 方式从 axios 接口里面取？
   requestInterceptor?: (config: AxiosRequestConfig) => AxiosRequestConfig;
+  // 不要用 any
   requestInterceptorCatch?: (error: any) => any;
 
   responseInterceptor?: (config: AxiosResponse) => AxiosResponse;
@@ -14,6 +16,7 @@ interface MYRequestConfig extends AxiosRequestConfig {
   interceptorHooks?: InterceptorHooks;
 }
 
+// 命名不规范，有些地方大些开头，这里又是小写开头
 interface myData<T> {
   data: T;
   returnCode: string;
@@ -26,6 +29,7 @@ class MYRequest {
   constructor(options: MYRequestConfig) {
     this.instance = axios.create(options);
 
+    // 这里的 use 好像完全没有意义？
     this.instance.interceptors.request.use(
       (config) => {
         return config;
@@ -46,10 +50,12 @@ class MYRequest {
   }
 
   request<T = any>(config: MYRequestConfig): Promise<T> {
+    // 这个 new Promise 也没有意义
     return new Promise((resolve, reject) => {
       debugger;
       this.instance
         .request<any, myData<T>>(config)
+        // 用 async-await 语法
         .then((res) => {
           resolve(res.data);
         })
