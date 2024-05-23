@@ -9,6 +9,7 @@ const pipeStream = (path: string, writeStream) => {
   return new Promise((resolve, reject) => {
     // 创建可读流
     const readStream = fs.createReadStream(path);
+    // 最好还是处理一下 error 的情况
     readStream.on("end", async () => {
       fs.unlinkSync(path);
       resolve(true);

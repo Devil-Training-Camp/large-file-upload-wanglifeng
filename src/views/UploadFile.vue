@@ -1,6 +1,7 @@
 <template>
   <div class="upload-container">
     <div class="upload-wrapper">
+      <!-- 看起来没有支持多文件上传，减分 -->
       <div class="upload-com">
         <el-upload
           :on-change="handleChange"
@@ -40,6 +41,7 @@ import Scheduler from "../utils/scheduler";
 const file = ref<UploadFile | null>(null);
 const fileParts = ref<Part[]>([]);
 const upload = ref<boolean>(true);
+// 下面两个变量好像都没用到
 const uploaded = ref<boolean>(false);
 const hash = ref<string>("");
 const controllerMap = new Map<number, AbortController>();
@@ -56,8 +58,11 @@ const handleUpload = async () => {
     ElMessage.error("您尚未上传文件！");
     return;
   }
+  // 应该不能叫 create，而是 split
   let partList: Part[] = createChunks(file.value.raw);
   let fileHash: string = await calculateHash(partList);
+  // 有一个 path-browser 的库适合在这里用
+  // 即使不用外部库，下面这两句的逻辑也比较独立，适合单独封装
   let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
   let extname = file.value.raw?.name.slice(lastDotIndex);
   filename = `${fileHash}${extname}`;
@@ -94,6 +99,9 @@ async function uploadParts({
   const scheduler = new Scheduler(limit);
   for (let i = 0; i < partList.length; i++) {
     const { chunk } = partList[i];
+    // 下面这几行可以优化成一行
+    // const cName = partList[i].chunkName || `${filename}-${partList.indexOf(partList[i])}`
+    // 另外，尽量规避使用 let，优先用 const
     let cName = "";
     if (partList[i].chunkName) {
       cName = partList[i].chunkName as string;
@@ -116,6 +124,7 @@ async function uploadParts({
     };
     scheduler.add(() => {
       return task()
+      // async-await
         .then(() => {
           uploadedPartsCount++;
           // 判断切片都上传完成时，进行切片合并
@@ -146,6 +155,7 @@ const calculateHash = (partList: Part[]): Promise<string> => {
   });
 };
 
+// 这些 hash、chunk 之类的计算都应该抽出去，不要都混在一起
 // 文件切片
 function createChunks(file: any): Part[] {
   const partList: Part[] = [];
