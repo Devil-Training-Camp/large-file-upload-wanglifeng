@@ -9,6 +9,7 @@
   "keywords": [],
   "dependencies": {
     "fs-extra": "^11.2.0",
+    "koa": "^2.15.3",
     "koa-body": "^6.0.1",
     "koa-bodyparser": "^4.4.1",
     "koa-pino-logger": "^4.0.0",
@@ -21,7 +22,6 @@
     "@types/koa-router": "^7.4.8",
     "@types/koa__router": "^12.0.4",
     "@types/node": "^20.12.12",
-    "koa": "^2.15.3",
     "sucrase": "^3.35.0"
   },
   "author": "wanglifeng",

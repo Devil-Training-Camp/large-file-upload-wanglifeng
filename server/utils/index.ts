@@ -8,9 +8,6 @@ export const isPositiveInter = (s) =>
 
 export const isUndefined = (s) => typeof s === "undefined";
 
-// 提取后缀名
-export const extractExt = (filename: string): string => path.extname(filename);
-
 export const TEMP_DIR = path.resolve(__dirname, "temp");
 
 export const PUBLIC_DIR = path.resolve(__dirname, "public");
