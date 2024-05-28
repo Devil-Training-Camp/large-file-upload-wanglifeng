@@ -33,15 +33,15 @@ import type { UploadFile, UploadProps } from "element-plus";
 import { CHUNK_SIZE } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import { Part, UploadPartControllerParams, UploadPartParams } from "@/types";
-import Worker from "../utils/hash_worker.ts?worker";
 import { mergePart, uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
+import { calculateHash } from "../utils/hash";
+import { splitChunks } from "../utils/chunk";
 
 const file = ref<UploadFile | null>(null);
 const fileParts = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const uploaded = ref<boolean>(false);
-const hash = ref<string>("");
 const controllerMap = new Map<number, AbortController>();
 let filename = "";
 
@@ -56,7 +56,7 @@ const handleUpload = async () => {
     ElMessage.error("您尚未上传文件！");
     return;
   }
-  let partList: Part[] = createChunks(file.value.raw);
+  let partList: Part[] = splitChunks(file.value.raw);
   let fileHash: string = await calculateHash(partList);
   let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
   let extname = file.value.raw?.name.slice(lastDotIndex);
@@ -130,35 +130,6 @@ async function uploadParts({
         });
     });
   }
-}
-
-// 计算切片hash
-const calculateHash = (partList: Part[]): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    let worker = new Worker();
-    worker.postMessage({ partList });
-    worker.onmessage = (event) => {
-      const { percent, hash } = event.data;
-      if (hash) {
-        resolve(hash);
-      }
-    };
-  });
-};
-
-// 文件切片
-function createChunks(file: any): Part[] {
-  const partList: Part[] = [];
-  let current = 0;
-  while (current < file.size!) {
-    const chunk = file.slice(current, current + CHUNK_SIZE);
-    partList.push({
-      chunk,
-      size: chunk.size,
-    });
-    current += CHUNK_SIZE;
-  }
-  return partList;
 }
 
 async function handlePause() {
