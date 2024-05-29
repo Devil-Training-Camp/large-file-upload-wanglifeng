@@ -164,3 +164,4 @@ function onTick(index: number, percent: number) {}
   }
 }
 </style>
+@/service/file
