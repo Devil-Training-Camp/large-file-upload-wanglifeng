@@ -1,29 +1,37 @@
 <template>
   <div class="upload-container">
     <div class="upload-wrapper">
-      <div class="upload-com">
-        <el-upload
-          :on-change="handleChange"
-          drag
-          :action="''"
-          multiple
-          :auto-upload="false"
-          :show-file-list="false"
-        >
-          <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-          <div class="el-upload__text">将文件放到这里或 <em>选择文件</em></div>
-        </el-upload>
-      </div>
       <div class="btn-list">
         <div class="btns">
-          <el-button type="primary" @click="handleUpload">上传</el-button>
-          <el-button type="warning" @click="handlePause">{{
-            upload ? "暂停" : "继续"
-          }}</el-button>
+          <el-button-group>
+            <el-button>
+              <el-icon><Upload /></el-icon>选择文件
+              <input
+                type="file"
+                multiple
+                class="select-file-input"
+                @change="handleChange"
+              />
+            </el-button>
+            <el-button @click="handleUpload"
+              ><el-icon class="el-icon--upload"><upload-filled /></el-icon>上传
+            </el-button>
+            <el-button @click="handlePause"
+              ><el-icon><VideoPause /></el-icon>暂停</el-button
+            >
+            <el-button @click="handlePause"
+              ><el-icon><VideoPlay /></el-icon>恢复</el-button
+            >
+            <el-button @click="clearFiles"
+              ><el-icon><Delete /></el-icon>清空</el-button
+            >
+          </el-button-group>
         </div>
       </div>
     </div>
-    <div class="file-wrapper"></div>
+    <div class="file-wrapper">
+      <FileItem />
+    </div>
   </div>
 </template>
 
@@ -32,6 +40,7 @@ import { ref } from "vue";
 import type { UploadFile, UploadProps } from "element-plus";
 import { CHUNK_SIZE } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
+import FileItem from "@/components/FileItem.vue";
 import { Part, UploadPartControllerParams, UploadPartParams } from "@/types";
 import { mergePart, uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
@@ -46,9 +55,14 @@ const controllerMap = new Map<number, AbortController>();
 let filename = "";
 
 // 文件上传事件
-const handleChange: UploadProps["onChange"] = (rawFile) => {
-  file.value = rawFile;
-};
+function handleChange(e) {
+  const [fileArr] = e.target.files;
+  if (!fileArr) {
+    file.value = null;
+    return;
+  }
+  file.value = fileArr;
+}
 
 // 上传文件到服务器
 const handleUpload = async () => {
@@ -56,7 +70,7 @@ const handleUpload = async () => {
     ElMessage.error("您尚未上传文件！");
     return;
   }
-  let partList: Part[] = splitChunks(file.value.raw);
+  let partList: Part[] = splitChunks(file.value);
   let fileHash: string = await calculateHash(partList);
   let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
   let extname = file.value.raw?.name.slice(lastDotIndex);
@@ -94,13 +108,9 @@ async function uploadParts({
   const scheduler = new Scheduler(limit);
   for (let i = 0; i < partList.length; i++) {
     const { chunk } = partList[i];
-    let cName = "";
-    if (partList[i].chunkName) {
-      cName = partList[i].chunkName as string;
-    } else {
-      cName = `${filename}-${partList.indexOf(partList[i])}`;
-    }
-
+    const cName = partList[i].chunkName
+      ? (partList[i].chunkName as string)
+      : `${filename}-${partList.indexOf(partList[i])}`;
     const params = {
       part: chunk,
       partName: cName,
@@ -112,7 +122,7 @@ async function uploadParts({
       controllerMap.set(i, controller);
       const { signal } = controller;
 
-      return await uploadPart(params, onTick, i, signal);
+      return await uploadPart(params);
     };
     scheduler.add(() => {
       return task()
@@ -149,19 +159,33 @@ async function handlePause() {
   }
 }
 
+function clearFiles() {}
+
 // 上传进度
 function onTick(index: number, percent: number) {}
 </script>
 
-<style lang="scss" scoped>
+<style lang="less" scoped>
 .upload-container {
-  display: flex;
-  padding: 20px;
-  font-size: 14px;
-  .upload-wrapper {
-    width: 400px;
-    height: 420px;
+  width: 80%;
+  border: 1px solid #d2d2d2;
+  border-radius: 4px;
+  background: #fff;
+  padding: 10px;
+  .btn-list {
+    .btns {
+      position: relative;
+      .select-file-input {
+        position: absolute;
+        display: inline-block;
+        left: 0;
+        top: 0;
+        border: none;
+        opacity: 0;
+        width: 96px;
+        height: 28px;
+      }
+    }
   }
 }
 </style>
-@/service/file
