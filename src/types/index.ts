@@ -4,42 +4,28 @@ export interface Response<T> {
   message?: string;
 }
 
-// 切片类
-export interface Part {
-  // 切片大小
-  size: number;
-  // 切片
-  chunk: Blob;
-  // 文件名称
-  filename?: string;
-  // 切片名称
-  chunkName?: string;
-  // 上传进度
-  percent?: number;
-}
-
 // 校验文件是否已上传参数
 export interface VerifyPartParams {
-  filename: string;
+  fileName: string;
+  fileHash: string;
 }
 
 export type VerifyPartResponse = Response<{
   // 是否需要上传
   needUpload: boolean;
+  // 已上传
+  uploadList: string[];
 }>;
 
-export interface UploadPartParams {
-  // 切片列表
-  partList: Part[];
-  // 文件hash
-  filename: string;
-  // 切片总数
-  partsTotal: number;
-  // 已经上传的切片数量
-  uploadedPartsCount: number;
-  // 请求数量限制
-  limit?: number;
+// 切片合并参数
+export interface MergePartsControllerParams {
+  // 文件名
+  filename?: string;
 }
+
+export type MergePartsControllerResponse = Response<{
+  filename: string;
+}>;
 
 // 单个切片上传参数
 export interface UploadPartControllerParams {
@@ -56,12 +42,42 @@ export type UploadPartControllerResponse = Response<{
   filename: string;
 }>;
 
-// 切片合并参数
-export interface MergePartsControllerParams {
-  // 文件名
+// 切片类
+export interface Part {
+  // 切片大小
+  size: number;
+  // 切片
+  chunk: Blob;
+  // 文件名称
   filename?: string;
+  // 切片名称
+  chunkName?: string;
+  // 上传进度
+  percent?: number;
 }
 
-export type MergePartsControllerResponse = Response<{
+export interface UploadPartParams {
+  // 切片列表
+  partList: Part[];
+  // 文件hash
   filename: string;
-}>;
+  // 切片总数
+  partsTotal: number;
+  // 已经上传的切片数量
+  uploadedPartsCount: number;
+  // 请求数量限制
+  limit?: number;
+}
+
+export interface UploadedFile {
+  // 文件名
+  name: string;
+  // 文件已上传大小
+  uploadedSize: number;
+  // 文件总大小
+  totalSize: number;
+  // 操作时间
+  time: string;
+  // 文件 hash 值
+  hash: string;
+}

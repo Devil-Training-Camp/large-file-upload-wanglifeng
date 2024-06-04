@@ -37,31 +37,42 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import type { UploadFile, UploadProps } from "element-plus";
+import type { UploadFile } from "element-plus";
 import { CHUNK_SIZE } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
-import { Part, UploadPartControllerParams, UploadPartParams } from "@/types";
+import {
+  Part,
+  UploadedFile,
+  UploadPartControllerParams,
+  UploadPartParams,
+} from "@/types";
 import { mergePart, uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
 import { calculateHash } from "../utils/hash";
 import { splitChunks } from "../utils/chunk";
 
 const file = ref<UploadFile | null>(null);
-const fileParts = ref<Part[]>([]);
+const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const uploaded = ref<boolean>(false);
-const controllerMap = new Map<number, AbortController>();
-let filename = "";
+const hash = ref<string>("");
+
+// 判断文件是否可以秒传
+async function VerifyUpload(fileName: string, fileHash: string) {
+  debugger;
+  const data = await verify({ fileName, fileHash });
+  return data;
+}
 
 // 文件上传事件
 function handleChange(e) {
-  const [fileArr] = e.target.files;
-  if (!fileArr) {
+  const [fileObj] = e.target.files;
+  if (!fileObj) {
     file.value = null;
     return;
   }
-  file.value = fileArr;
+  file.value = fileObj;
 }
 
 // 上传文件到服务器
@@ -70,31 +81,32 @@ const handleUpload = async () => {
     ElMessage.error("您尚未上传文件！");
     return;
   }
-  let partList: Part[] = splitChunks(file.value);
-  let fileHash: string = await calculateHash(partList);
-  let lastDotIndex = file.value.raw?.name.lastIndexOf(".");
-  let extname = file.value.raw?.name.slice(lastDotIndex);
-  filename = `${fileHash}${extname}`;
-  partList = partList.map((part, index: number) => ({
-    filename, //文件名
-    chunkName: `${filename}-${index}`, //分块的名称
-    chunk: part.chunk, // 分块
-    size: part.chunk.size, // 分块的大小
-    percent: 0,
-  }));
 
-  fileParts.value = partList;
-  const { needUpload } = (await verify({ filename })) as any;
-  if (needUpload) {
-    await uploadParts({
-      partList,
-      filename,
-      partsTotal: partList.length,
-      uploadedPartsCount: 0,
-    });
-  } else {
-    ElMessage.success("秒传成功！");
-  }
+  let filePartList: Part[] = splitChunks(file.value);
+  hash.value = await calculateHash(filePartList);
+  partList.value = filePartList.map((item, index) => ({
+    ...item,
+    chunkHash: `{hash.value}-${index}`,
+    fileHash: hash.value,
+    index,
+    progress: 0,
+  }));
+  debugger;
+  const { needUpload, uploadList } = await VerifyUpload(
+    file.value.name,
+    hash.value,
+  );
+
+  // if (needUpload) {
+  //   await uploadParts({
+  //     partList,
+  //     filename,
+  //     partsTotal: partList.length,
+  //     uploadedPartsCount: 0,
+  //   });
+  // } else {
+  //   ElMessage.success("秒传成功！");
+  // }
 };
 
 // 上传切片
@@ -118,10 +130,6 @@ async function uploadParts({
     } as UploadPartControllerParams;
 
     const task = async () => {
-      const controller = new AbortController();
-      controllerMap.set(i, controller);
-      const { signal } = controller;
-
       return await uploadPart(params);
     };
     scheduler.add(() => {
@@ -145,15 +153,11 @@ async function uploadParts({
 async function handlePause() {
   upload.value = !upload.value;
   if (!upload.value) {
-    controllerMap.forEach((controller, index) => {
-      controller.abort();
-    });
-    controllerMap.clear();
   } else {
     await uploadParts({
-      partList: fileParts.value,
+      partList: partList.value,
       filename: filename,
-      partsTotal: fileParts.value.length,
+      partsTotal: partList.value.length,
       uploadedPartsCount: 0,
     });
   }

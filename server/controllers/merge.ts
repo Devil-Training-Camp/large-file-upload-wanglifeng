@@ -39,12 +39,15 @@ export const mergePart = async (
 };
 
 export const mergeController = async (ctx: Context) => {
-  const { filename } = ctx.request.body as VerifyPartParams;
-  if (!isValidString(filename)) {
-    throw new HttpError(HttpStatus.PARAM_ERROR, "filename 不能为空");
+  const { fileName, fileHash } = ctx.request.body as VerifyPartParams;
+  if (!isValidString(fileName)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileName 不能为空");
+  }
+  if (!isValidString(fileHash)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileHash 不能为空");
   }
 
-  let filePath = path.resolve(PUBLIC_DIR, filename);
+  let filePath = path.resolve(PUBLIC_DIR, fileName);
   let existFile = await fs.existsSync(filePath);
   if (existFile) {
     ctx.body = {
@@ -53,7 +56,7 @@ export const mergeController = async (ctx: Context) => {
     } as VerifyPartResponse;
   }
 
-  const chunksDir = path.resolve(TEMP_DIR, filename);
+  const chunksDir = path.resolve(TEMP_DIR, fileName);
   // 切片目录不存在，则无法合并切片，报异常
   if (!fs.existsSync(chunksDir)) {
     ctx.body = {
@@ -61,7 +64,7 @@ export const mergeController = async (ctx: Context) => {
       message: "合并失败，请重新上传",
     } as VerifyPartResponse;
   }
-  await mergePart(filename);
+  await mergePart(fileName);
   ctx.body = {
     code: 0,
     message: "合并成功",

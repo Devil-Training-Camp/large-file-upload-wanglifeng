@@ -6,11 +6,14 @@ import { HttpError, HttpStatus } from "../utils/http-error";
 import { isValidString, PUBLIC_DIR, TEMP_DIR } from "../utils";
 
 export const verifyController = async (ctx: Context) => {
-  const { filename } = ctx.request.body as VerifyPartParams;
-  if (!isValidString(filename)) {
-    throw new HttpError(HttpStatus.PARAM_ERROR, "filename 不能为空");
+  const { fileName, fileHash } = ctx.request.body as VerifyPartParams;
+  if (!isValidString(fileName)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileName 不能为空");
   }
-  let filePath = path.resolve(PUBLIC_DIR, filename);
+  if (!isValidString(fileHash)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileHash 不能为空");
+  }
+  let filePath = path.resolve(PUBLIC_DIR, fileName);
   let existFile = await fs.existsSync(filePath);
   if (existFile) {
     ctx.body = {
@@ -20,7 +23,7 @@ export const verifyController = async (ctx: Context) => {
       },
     } as VerifyPartResponse;
   }
-  let tempDir = path.resolve(TEMP_DIR, filename);
+  let tempDir = path.resolve(TEMP_DIR, fileName);
   let exist = await fs.existsSync(tempDir);
   let uploadList: any[] = [];
   if (exist) {

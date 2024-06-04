@@ -6,12 +6,14 @@ export interface Response<T> {
 
 // 校验文件是否已上传参数
 export interface VerifyPartParams {
-  filename: string;
+  fileName: string;
+  fileHash: string;
 }
 
 export type VerifyPartResponse = Response<{
   // 是否需要上传
   needUpload: boolean;
+  uploadList: string[];
 }>;
 
 // 单个切片上传参数

@@ -1,20 +1,21 @@
 <template>
   <div class="file-list">
-    <el-collapse accordion>
-      <el-collapse-item>
+    <el-collapse v-if="fileList.length > 0" accordion>
+      <el-collapse-item v-for="(item, index) in fileList" :key="index">
         <div class="progress-box">
           <div class="list-item">
             <div class="item-name">
-              <span>名称：</span>
+              <span>{{ index + 1 }}名称：{{ item.name }}</span>
             </div>
-            <div class="item-size">大小：</div>
+            <div class="item-size">大小：{{ item.size }}</div>
           </div>
-          <div class="item-progress">
-            <el-progress />
+          <div v-if="item.hashProgress !== 100" class="item-progress">
+            <span></span>
+            <el-progress :percentage="item.hashProgress" />
           </div>
-          <div class="item-progress">
+          <div v-else class="item-progress">
             <span>文件进度：</span>
-            <el-progress />
+            <el-progress :percentage="item.uploadProgress" />
           </div>
         </div>
         <div class="item-chunk-box">
@@ -39,7 +40,16 @@
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import type { UploadFile } from "element-plus";
+import { UploadedFile } from "@/types";
+defineProps({
+  fileList: {
+    type: Array as () => (UploadedFile | UploadFile)[],
+    default: () => [],
+  },
+});
+</script>
 
 <style lang="less" scoped>
 .file-list {
