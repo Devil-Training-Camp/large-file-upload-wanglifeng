@@ -34,15 +34,14 @@ export const uploadPart = async (params: UploadPartControllerParams) => {
 };
 
 export const verify = async (params: VerifyPartParams) => {
-  const res = await service.post<VerifyPartResponse>(API_VERIFY, {
-    params,
-  });
+  const res = await service.post<VerifyPartResponse>(API_VERIFY, params);
   return res.data.data;
 };
 
 export const mergePart = async (params: MergePartsControllerParams) => {
-  const res = await service.post<MergePartsControllerResponse>(API_MERGE_PART, {
+  const res = await service.post<MergePartsControllerResponse>(
+    API_MERGE_PART,
     params,
-  });
+  );
   return res.data.data;
 };

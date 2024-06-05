@@ -21,8 +21,8 @@ const readChunk = (file: any) => {
     reader.onerror = (err) => {
       reject(err);
     };
-  })
-}
+  });
+};
 
 // 使用 onmessage 方法获取主线程传过来的消息
 self.onmessage = async (event) => {
@@ -32,7 +32,11 @@ self.onmessage = async (event) => {
     const chunk = partList[i].chunk;
     const res = await readChunk(chunk);
     spark.append(res);
+
+    self.postMessage({
+      percentage: ((i + 1) / partList.length) * 100,
+    });
   }
   self.postMessage({ percent: 100, hash: spark.end() });
-  self.close()
+  self.close();
 };

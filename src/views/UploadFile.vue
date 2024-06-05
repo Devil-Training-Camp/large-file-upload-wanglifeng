@@ -58,13 +58,6 @@ const upload = ref<boolean>(true);
 const uploaded = ref<boolean>(false);
 const hash = ref<string>("");
 
-// 判断文件是否可以秒传
-async function VerifyUpload(fileName: string, fileHash: string) {
-  debugger;
-  const data = await verify({ fileName, fileHash });
-  return data;
-}
-
 // 文件上传事件
 function handleChange(e) {
   const [fileObj] = e.target.files;
@@ -82,31 +75,32 @@ const handleUpload = async () => {
     return;
   }
 
-  let filePartList: Part[] = splitChunks(file.value);
+  const filePartList: Part[] = splitChunks(file.value);
   hash.value = await calculateHash(filePartList);
+  let fileName: string = file.value.name,
+    fileHash: string = hash.value;
+  const { needUpload, uploadList } = await verify({ fileName, fileHash });
+
+  if (!needUpload) {
+    ElMessage.success("秒传：上传成功");
+    return;
+  }
+
   partList.value = filePartList.map((item, index) => ({
     ...item,
-    chunkHash: `{hash.value}-${index}`,
+    chunkHash: `${hash.value}-${index}`,
     fileHash: hash.value,
     index,
     progress: 0,
   }));
-  debugger;
-  const { needUpload, uploadList } = await VerifyUpload(
-    file.value.name,
-    hash.value,
-  );
 
-  // if (needUpload) {
-  //   await uploadParts({
-  //     partList,
-  //     filename,
-  //     partsTotal: partList.length,
-  //     uploadedPartsCount: 0,
-  //   });
-  // } else {
-  //   ElMessage.success("秒传成功！");
-  // }
+  console.log(partList.value);
+  // await uploadParts({
+  //   partList,
+  //   filename,
+  //   partsTotal: partList.length,
+  //   uploadedPartsCount: 0,
+  // });
 };
 
 // 上传切片

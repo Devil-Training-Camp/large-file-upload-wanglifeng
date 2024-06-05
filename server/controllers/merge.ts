@@ -13,6 +13,9 @@ const pipeStream = (path: string, writeStream) => {
       fs.unlinkSync(path);
       resolve(true);
     });
+    readStream.on("error", (error) => {
+      reject(error);
+    });
     readStream.pipe(writeStream);
   });
 };
