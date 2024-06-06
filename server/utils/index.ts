@@ -18,8 +18,4 @@ export const getUploadedList = async (fileHash) => {
     : [];
 };
 
-export const TEMP_DIR = path.resolve(__dirname, "temp");
-
-export const PUBLIC_DIR = path.resolve(__dirname, "public");
-
 export const CHUNK_SIZE = 5 * 1024 * 1024;

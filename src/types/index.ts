@@ -48,19 +48,17 @@ export interface Part {
   size: number;
   // 切片
   chunk: Blob;
-  // 文件名称
-  filename?: string;
-  // 切片名称
-  chunkName?: string;
+  // 切片hash
+  hash?: string;
   // 上传进度
-  percent?: number;
+  percentage?: number;
 }
 
 export interface UploadPartParams {
   // 切片列表
   partList: Part[];
   // 文件hash
-  filename: string;
+  hash: string;
   // 切片总数
   partsTotal: number;
   // 已经上传的切片数量

@@ -7,7 +7,6 @@ import {
   extractExt,
   getUploadedList,
   isValidString,
-  TEMP_DIR,
   UPLOAD_DIR,
 } from "../utils";
 

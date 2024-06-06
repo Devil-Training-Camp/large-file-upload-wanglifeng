@@ -55,7 +55,6 @@ import { splitChunks } from "../utils/chunk";
 const file = ref<UploadFile | null>(null);
 const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
-const uploaded = ref<boolean>(false);
 const hash = ref<string>("");
 
 // 文件上传事件
@@ -94,27 +93,29 @@ const handleUpload = async () => {
     progress: 0,
   }));
 
-  console.log(partList.value);
-  // await uploadParts({
-  //   partList,
-  //   filename,
-  //   partsTotal: partList.length,
-  //   uploadedPartsCount: 0,
-  // });
+  await uploadParts({
+    partList: partList.value,
+    hash: hash.value,
+    partsTotal: partList.value.length,
+    uploadedPartsCount: 0,
+  });
 };
 
 // 上传切片
 async function uploadParts({
   partList,
-  filename,
+  hash,
   partsTotal,
   uploadedPartsCount,
   limit = 3,
 }: UploadPartParams) {
   const scheduler = new Scheduler(limit);
+  const totalParts = partList.length;
+  let uploadedCount = 0;
+
   for (let i = 0; i < partList.length; i++) {
     const { chunk } = partList[i];
-    const cName = partList[i].chunkName
+    const cName = partList[i]
       ? (partList[i].chunkName as string)
       : `${filename}-${partList.indexOf(partList[i])}`;
     const params = {
@@ -150,7 +151,7 @@ async function handlePause() {
   } else {
     await uploadParts({
       partList: partList.value,
-      filename: filename,
+      hash: hash.value,
       partsTotal: partList.value.length,
       uploadedPartsCount: 0,
     });
