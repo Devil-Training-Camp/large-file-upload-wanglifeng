@@ -18,12 +18,19 @@ const service = axios.create({
   baseURL: BASE_URL,
 });
 
+/**
+ * @description: 向服务端发起上传切片请求
+ * @param {UploadPartControllerParams} params
+ * @return {*} 返回上传结果
+ */
 export const uploadPart = async (params: UploadPartControllerParams) => {
-  const { part, partName, filename } = params;
+  const { part, hash, fileHash, fileName, size } = params;
   const formData = new FormData();
   formData.append("part", part);
-  formData.append("partName", partName);
-  formData.append("filename", filename);
+  formData.append("hash", hash);
+  formData.append("fileHash", fileHash);
+  formData.append("fileName", fileName);
+  formData.append("size", String(size));
   const res = await service.post<UploadPartControllerResponse>(
     API_UPLOAD_PART,
     {
@@ -33,11 +40,21 @@ export const uploadPart = async (params: UploadPartControllerParams) => {
   return res.data.data;
 };
 
+/**
+ * @description: 向服务端发起检验文件是否上传请求
+ * @param {VerifyPartParams} params
+ * @return {*}
+ */
 export const verify = async (params: VerifyPartParams) => {
   const res = await service.post<VerifyPartResponse>(API_VERIFY, params);
   return res.data.data;
 };
 
+/**
+ * @description: 向服务端发起切片合并请求
+ * @param {MergePartsControllerParams} params
+ * @return {*} 返回合并结果
+ */
 export const mergePart = async (params: MergePartsControllerParams) => {
   const res = await service.post<MergePartsControllerResponse>(
     API_MERGE_PART,

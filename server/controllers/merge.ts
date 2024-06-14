@@ -1,9 +1,9 @@
-import type { VerifyPartParams, VerifyPartResponse } from "./../utils/types";
 import { type Context } from "koa";
-import { CHUNK_SIZE, isValidString, PUBLIC_DIR, TEMP_DIR } from "../utils";
+import { CHUNK_SIZE, UPLOAD_DIR, extractExt, isValidString } from "../utils";
 import { HttpError, HttpStatus } from "../utils/http-error";
 import path from "path";
 import fs from "fs-extra";
+import { MergePartsControllerParams, MergePartsControllerResponse } from '../utils/types';
 
 const pipeStream = (path: string, writeStream) => {
   return new Promise((resolve, reject) => {
@@ -20,29 +20,41 @@ const pipeStream = (path: string, writeStream) => {
   });
 };
 
+/**
+ * 合并切片
+ * @param {*} filePath 文件目录
+ * @param {*} fileHash 文件 hash 值
+ * @param {*} size 切片的个数
+ */
 export const mergePart = async (
-  filename: string,
+  filePath: string,
+  fileHash: string,
   size: number = CHUNK_SIZE,
 ) => {
-  const filePath = path.resolve(PUBLIC_DIR, filename);
-  const chunksDir = path.resolve(TEMP_DIR, filename);
-  const chunkFiles = await fs.readdir(chunksDir);
-  chunkFiles.sort((a, b) => Number(a.split("-")[1]) - Number(b.split("-")[1]));
+  // 获取切片路径
+  const chunkDir = path.resolve(UPLOAD_DIR, fileHash);
+  // 读取所有 chunk 路径
+  const chunkPaths = await fs.readdir(chunkDir);
+  // 根据切片下标进行排序，否则直接读取目录获取的顺序可能会错乱
+  chunkPaths.sort((a, b) => Number(a.split("-")[1]) - Number(b.split("-")[1]));
+  // 并发写入文件
   await Promise.all(
-    chunkFiles.map((chunkFile, index) =>
-      pipeStream(
-        path.resolve(chunksDir, chunkFile),
+    chunkPaths.map((chunkPath, index) =>
+      pipeStream(  // 指定位置创建可写流
+        path.resolve(chunkDir, chunkPath),
         fs.createWriteStream(filePath, {
           start: index * size,
         }),
       ),
     ),
   );
-  await fs.rmdir(chunksDir);
+  // 合并后删除保存切片的目录
+  await fs.rmdir(chunkDir);
 };
 
+
 export const mergeController = async (ctx: Context) => {
-  const { fileName, fileHash } = ctx.request.body as VerifyPartParams;
+  const { fileName, fileHash, size } = ctx.request.body as MergePartsControllerParams;
   if (!isValidString(fileName)) {
     throw new HttpError(HttpStatus.PARAM_ERROR, "fileName 不能为空");
   }
@@ -50,26 +62,12 @@ export const mergeController = async (ctx: Context) => {
     throw new HttpError(HttpStatus.PARAM_ERROR, "fileHash 不能为空");
   }
 
-  let filePath = path.resolve(PUBLIC_DIR, fileName);
-  let existFile = await fs.existsSync(filePath);
-  if (existFile) {
-    ctx.body = {
-      code: 0,
-      message: "合并成功",
-    } as VerifyPartResponse;
-  }
-
-  const chunksDir = path.resolve(TEMP_DIR, fileName);
-  // 切片目录不存在，则无法合并切片，报异常
-  if (!fs.existsSync(chunksDir)) {
-    ctx.body = {
-      code: 0,
-      message: "合并失败，请重新上传",
-    } as VerifyPartResponse;
-  }
-  await mergePart(fileName);
+  const ext = extractExt(fileName);
+  const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
+  await mergePart(filePath, fileHash, size);
   ctx.body = {
     code: 0,
-    message: "合并成功",
-  } as VerifyPartResponse;
+    msg: 'file merged success',
+    data: { fileHash: fileHash }
+  } as MergePartsControllerResponse
 };

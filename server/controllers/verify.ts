@@ -28,10 +28,10 @@ export const verifyController = async (ctx: Context) => {
     msg = "文件存在，不需要上传";
   }
   ctx.body = {
-    code: 200,
+    code: 0,
     data: {
       needUpload,
-      uploadList: await getUploadedList(fileHash),
+      uploadedList: await getUploadedList(fileHash),
     },
     msg,
   } as VerifyPartResponse;

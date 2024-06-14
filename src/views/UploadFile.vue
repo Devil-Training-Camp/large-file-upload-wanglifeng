@@ -37,7 +37,6 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import type { UploadFile } from "element-plus";
 import { CHUNK_SIZE } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
@@ -52,12 +51,16 @@ import Scheduler from "../utils/scheduler";
 import { calculateHash } from "../utils/hash";
 import { splitChunks } from "../utils/chunk";
 
-const file = ref<UploadFile | null>(null);
+const file = ref<File | null>(null);
 const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const hash = ref<string>("");
 
-// 文件上传事件
+/**
+ * @description: 上传文件控件触发事件
+ * @param {*} e
+ * @return {*}
+ */
 function handleChange(e) {
   const [fileObj] = e.target.files;
   if (!fileObj) {
@@ -67,18 +70,24 @@ function handleChange(e) {
   file.value = fileObj;
 }
 
-// 上传文件到服务器
+/**
+ * @description: 上传切片文件到服务器
+ * @return {*}
+ */
 const handleUpload = async () => {
   if (!file.value) {
     ElMessage.error("您尚未上传文件！");
     return;
   }
 
+  // 生成文件切片
   const filePartList: Part[] = splitChunks(file.value);
+  // 计算 hash 值
   hash.value = await calculateHash(filePartList);
   let fileName: string = file.value.name,
     fileHash: string = hash.value;
-  const { needUpload, uploadList } = await verify({ fileName, fileHash });
+  // 校验文件是否上传过
+  const { needUpload, uploadedList } = await verify({ fileName, fileHash });
 
   if (!needUpload) {
     ElMessage.success("秒传：上传成功");
@@ -115,33 +124,18 @@ async function uploadParts({
 
   for (let i = 0; i < partList.length; i++) {
     const { chunk } = partList[i];
-    const cName = partList[i]
-      ? (partList[i].chunkName as string)
-      : `${filename}-${partList.indexOf(partList[i])}`;
+
+    let cHash = partList[i].hash? partList[i].hash as string: `${hash}-${partList.indexOf(partList[i])}`;
+    
     const params = {
       part: chunk,
-      partName: cName,
-      filename: filename,
+      hash:cHash,
+      fileHash:hash,
+      fileName: file.value?.name as string,
+      size: file.value?.size,
     } as UploadPartControllerParams;
 
-    const task = async () => {
-      return await uploadPart(params);
-    };
-    scheduler.add(() => {
-      return task()
-        .then(() => {
-          uploadedPartsCount++;
-          // 判断切片都上传完成时，进行切片合并
-          if (uploadedPartsCount == partsTotal) {
-            async () => {
-              await mergePart({ filename });
-            };
-          }
-        })
-        .catch((err) => {
-          throw err;
-        });
-    });
+    
   }
 }
 

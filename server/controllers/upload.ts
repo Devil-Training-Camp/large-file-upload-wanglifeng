@@ -1,6 +1,5 @@
-import { UploadPartControllerResponse } from "./../utils/types";
 import { type Context } from "koa";
-import { isValidString, PUBLIC_DIR, TEMP_DIR } from "../utils";
+import { extractExt, getChunkDir, isValidString, UPLOAD_DIR } from "../utils";
 import { HttpError, HttpStatus } from "../utils/http-error";
 import type {
   UploadPartControllerParams,
@@ -10,33 +9,64 @@ import path from "path";
 import fs from "fs-extra";
 
 export const uploadController = async (ctx: Context) => {
-  const { filename, partName } = ctx.request.body as UploadPartControllerParams;
-
+  const { fileName, fileHash, hash, size } = ctx.request.body as UploadPartControllerParams;
+  console.log(ctx.request.files)
   const partFile = ctx.request.files?.chunk;
   if (!partFile || Array.isArray(partFile)) {
     throw new Error(`无效的块文件参数`);
   }
-  if (!isValidString(filename)) {
-    throw new HttpError(HttpStatus.PARAM_ERROR, "filename 不能为空: ");
+  if (!isValidString(fileName)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileName 不能为空: ");
   }
-  if (!isValidString(partName)) {
-    throw new HttpError(HttpStatus.PARAM_ERROR, "partName 不能为空: ");
-  }
-  let chunkDir = path.resolve(TEMP_DIR, filename);
-  // 存储切片的临时文件夹
-  let exist = await fs.pathExists(chunkDir);
-  // 切片目录不存在，则创建切片目录
-  if (!exist) {
-    await fs.mkdirs(chunkDir);
+  if (!isValidString(fileHash)) {
+    throw new HttpError(HttpStatus.PARAM_ERROR, "fileHash 不能为空: ");
   }
 
-  let chunkFilePath = path.resolve(chunkDir, partName);
-  await fs.move(partFile.filepath, chunkFilePath);
+  const params = {
+    fileName,
+    fileHash,
+    hash,
+    size
+  } as UploadPartControllerParams
+
+  // 获取文件路径 path.resolve 将相对路径解析为绝对路径
+  const filePath = path.resolve(UPLOAD_DIR, `${params.fileHash!}${extractExt(params.fileName!)}`);
+  // 获取切片文件夹
+  const chunkDir = getChunkDir(params.fileHash!);
+  // 获取切片保存路径
+  const chunkPath = path.resolve(chunkDir, params.hash!);
+
+  // 文件存在，直接返回
+  if (await fs.pathExists(filePath)) {
+    ctx.body = {
+      code: 0,
+      message: 'file exist',
+      data: {
+        fileHash: fileHash
+      }
+    } as UploadPartControllerResponse;
+  }
+  // 切片存在，直接返回
+  if (await fs.pathExists(chunkPath)) {
+    ctx.body = {
+      code: 1,
+      message: 'chunk exist',
+      data: {
+        fileHash: fileHash
+      }
+    } as UploadPartControllerResponse;
+  }
+  // 切片目录不存在，创建切片目录
+  if (!(await fs.pathExists(chunkDir))) {
+    await fs.mkdirs(chunkDir, { recursive: true });
+  }
+
+  await fs.move(partFile.filepath, path.resolve(chunkDir, hash));
   ctx.body = {
-    code: 0,
-    message: "received file chunk",
+    code: 2,
+    message: 'received file chunk',
     data: {
-      filename,
-    },
+      fileHash: fileHash
+    }
   } as UploadPartControllerResponse;
 };

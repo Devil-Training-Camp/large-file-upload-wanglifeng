@@ -14,32 +14,41 @@ export type VerifyPartResponse = Response<{
   // 是否需要上传
   needUpload: boolean;
   // 已上传
-  uploadList: string[];
+  uploadedList: string[];
 }>;
 
 // 切片合并参数
 export interface MergePartsControllerParams {
+  // 文件 hash 值
+  fileHash: string
   // 文件名
-  filename?: string;
+  fileName: string
+  // 切片大小
+  size?: number
 }
 
 export type MergePartsControllerResponse = Response<{
-  filename: string;
+  // 文件 hash 值
+  fileHash: string
 }>;
 
 // 单个切片上传参数
 export interface UploadPartControllerParams {
   // 切片
   part: Blob;
-  // 切片名称
-  partName: string;
-  // 文件名称
-  filename: string;
+  // 切片 hash 值
+  hash: string
+  // 文件 hash 值
+  fileHash: string
+  // 文件名
+  fileName: string
+  // 文件大小
+  size: number
 }
 
 export type UploadPartControllerResponse = Response<{
-  // 文件名
-  filename: string;
+  // 文件 hash 值
+  fileHash: string
 }>;
 
 // 切片类
