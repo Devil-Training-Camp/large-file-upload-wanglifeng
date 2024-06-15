@@ -20,16 +20,16 @@ export type VerifyPartResponse = Response<{
 // 切片合并参数
 export interface MergePartsControllerParams {
   // 文件 hash 值
-  fileHash: string
+  fileHash: string;
   // 文件名
-  fileName: string
+  fileName: string;
   // 切片大小
-  size?: number
+  size?: number;
 }
 
 export type MergePartsControllerResponse = Response<{
   // 文件 hash 值
-  fileHash: string
+  fileHash: string;
 }>;
 
 // 单个切片上传参数
@@ -37,18 +37,18 @@ export interface UploadPartControllerParams {
   // 切片
   part: Blob;
   // 切片 hash 值
-  hash: string
+  hash: string;
   // 文件 hash 值
-  fileHash: string
+  fileHash: string;
   // 文件名
-  fileName: string
+  fileName: string;
   // 文件大小
-  size: number
+  size: number;
 }
 
 export type UploadPartControllerResponse = Response<{
   // 文件 hash 值
-  fileHash: string
+  fileHash: string;
 }>;
 
 // 切片类
@@ -68,10 +68,6 @@ export interface UploadPartParams {
   partList: Part[];
   // 文件hash
   hash: string;
-  // 切片总数
-  partsTotal: number;
-  // 已经上传的切片数量
-  uploadedPartsCount: number;
   // 请求数量限制
   limit?: number;
 }

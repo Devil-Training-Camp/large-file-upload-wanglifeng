@@ -22,9 +22,6 @@
             <el-button @click="handlePause"
               ><el-icon><VideoPlay /></el-icon>恢复</el-button
             >
-            <el-button @click="clearFiles"
-              ><el-icon><Delete /></el-icon>清空</el-button
-            >
           </el-button-group>
         </div>
       </div>
@@ -55,6 +52,8 @@ const file = ref<File | null>(null);
 const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const hash = ref<string>("");
+const controllersMap = new Map<number, AbortController>();
+const totalPercentage = ref<number>(0);
 
 /**
  * @description: 上传文件控件触发事件
@@ -87,8 +86,8 @@ const handleUpload = async () => {
   let fileName: string = file.value.name,
     fileHash: string = hash.value;
   // 校验文件是否上传过
-  const { needUpload, uploadedList } = await verify({ fileName, fileHash });
-
+  const { needUpload } = await verify({ fileName, fileHash });
+  // 如果上传过，不需要上传，秒传
   if (!needUpload) {
     ElMessage.success("秒传：上传成功");
     return;
@@ -105,19 +104,17 @@ const handleUpload = async () => {
   await uploadParts({
     partList: partList.value,
     hash: hash.value,
-    partsTotal: partList.value.length,
-    uploadedPartsCount: 0,
   });
 };
 
-// 上传切片
-async function uploadParts({
-  partList,
-  hash,
-  partsTotal,
-  uploadedPartsCount,
-  limit = 3,
-}: UploadPartParams) {
+/**
+ * @description: 上传切片
+ * @param {*} partList 切片列表
+ * @param {*} hash 文件 hash值
+ * @param {*} limit 最大请求数
+ * @return {*}
+ */
+async function uploadParts({ partList, hash, limit = 3 }: UploadPartParams) {
   const scheduler = new Scheduler(limit);
   const totalParts = partList.length;
   let uploadedCount = 0;
@@ -125,18 +122,53 @@ async function uploadParts({
   for (let i = 0; i < partList.length; i++) {
     const { chunk } = partList[i];
 
-    let cHash = partList[i].hash? partList[i].hash as string: `${hash}-${partList.indexOf(partList[i])}`;
-    
+    let pHash = partList[i].hash
+      ? (partList[i].hash as string)
+      : `${hash}-${partList.indexOf(partList[i])}`;
+
     const params = {
       part: chunk,
-      hash:cHash,
-      fileHash:hash,
+      hash: pHash,
+      fileHash: hash,
       fileName: file.value?.name as string,
       size: file.value?.size,
     } as UploadPartControllerParams;
 
-    
+    scheduler.add(() => {
+      const controller = new AbortController();
+      controllersMap.set(i, controller);
+      const { signal } = controller;
+
+      const task = (async () => {
+        return await uploadPart(params, onProgress(partList[i]), i, signal);
+      })();
+
+      return task
+        .then(() => {
+          uploadedCount++;
+          // 判断切片都上传完成时，进行切片合并
+          if (uploadedCount == totalParts) {
+            mergeRequest();
+          }
+        })
+        .catch((err) => {
+          throw err;
+        });
+    });
   }
+}
+
+/**
+ * @description: 切片合并请求
+ * @return {*}
+ */
+async function mergeRequest() {
+  await mergePart({
+    fileName: file.value?.name as string,
+    size: CHUNK_SIZE,
+    fileHash: hash.value,
+  });
+  file.value = null;
 }
 
 async function handlePause() {
@@ -146,16 +178,27 @@ async function handlePause() {
     await uploadParts({
       partList: partList.value,
       hash: hash.value,
-      partsTotal: partList.value.length,
-      uploadedPartsCount: 0,
     });
   }
 }
 
-function clearFiles() {}
+/**
+ * @description: 上传进度监听函数
+ * @param {*} item
+ * @return {*}
+ */
+function onProgress(item: Part) {
+  return (e) => {
+    item.percentage = parseInt(String((e.loaded / e.total) * 100));
+  };
+}
 
-// 上传进度
-function onTick(index: number, percent: number) {}
+function abortAll() {
+  controllersMap.forEach((controller, index) => {
+    controller.abort();
+  });
+  controllersMap.clear();
+}
 </script>
 
 <style lang="less" scoped>

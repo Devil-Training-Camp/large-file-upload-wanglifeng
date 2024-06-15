@@ -27,7 +27,8 @@ export const extractExt = (filename: string): string =>
  * @param {string} 文件 fileHash 值
  * @return {*}
  */
-export const getChunkDir = (fileHash: string) => path.resolve(UPLOAD_DIR, `chunk_dir_${fileHash}`);
+export const getChunkDir = (fileHash: string) =>
+  path.resolve(UPLOAD_DIR, `chunkDir_${fileHash}`);
 
 /**
  * @description: 获取已上传切片列表

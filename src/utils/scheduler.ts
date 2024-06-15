@@ -1,15 +1,15 @@
 class Scheduler {
-  private queue: (() => Promise<void>)[] = []
-  private maxCount: number
-  private runCount = 0
+  private queue: (() => Promise<void>)[] = [];
+  private maxCount: number;
+  private runCount = 0;
 
   constructor(limit: number) {
-    this.maxCount = limit
+    this.maxCount = limit;
   }
 
   add(promiseFn: () => Promise<void>) {
-    this.queue.push(promiseFn)
-    this.run()
+    this.queue.push(promiseFn);
+    this.run();
   }
 
   private run() {
@@ -21,7 +21,7 @@ class Scheduler {
     task().finally(() => {
       this.runCount--;
       this.run();
-    })
+    });
   }
 }
 

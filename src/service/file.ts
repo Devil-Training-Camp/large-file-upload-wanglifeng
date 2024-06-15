@@ -20,10 +20,14 @@ const service = axios.create({
 
 /**
  * @description: 向服务端发起上传切片请求
- * @param {UploadPartControllerParams} params
  * @return {*} 返回上传结果
  */
-export const uploadPart = async (params: UploadPartControllerParams) => {
+export const uploadPart = async (
+  params: UploadPartControllerParams,
+  onTick: (index: number, percent: number) => void,
+  index: number,
+  signal?: AbortSignal,
+) => {
   const { part, hash, fileHash, fileName, size } = params;
   const formData = new FormData();
   formData.append("part", part);
@@ -33,9 +37,7 @@ export const uploadPart = async (params: UploadPartControllerParams) => {
   formData.append("size", String(size));
   const res = await service.post<UploadPartControllerResponse>(
     API_UPLOAD_PART,
-    {
-      formData,
-    },
+    formData,
   );
   return res.data.data;
 };
