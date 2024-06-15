@@ -1,3 +1,7 @@
+/**
+ * @description: 控制切片上传并发请求
+ * @return {*}
+ */
 class Scheduler {
   private queue: (() => Promise<void>)[] = [];
   private maxCount: number;

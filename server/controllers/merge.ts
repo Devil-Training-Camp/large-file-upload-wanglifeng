@@ -63,7 +63,6 @@ export const mergePart = async (
 };
 
 export const mergeController = async (ctx: Context) => {
-  console.log(ctx.request.body);
   const { fileName, fileHash, size } = ctx.request
     .body as MergePartsControllerParams;
   if (!isValidString(fileName)) {

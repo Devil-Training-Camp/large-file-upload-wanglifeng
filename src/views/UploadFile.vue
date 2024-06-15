@@ -16,10 +16,10 @@
             <el-button @click="handleUpload"
               ><el-icon class="el-icon--upload"><upload-filled /></el-icon>上传
             </el-button>
-            <el-button @click="handlePause"
+            <el-button @click="handlePause" v-if="upload"
               ><el-icon><VideoPause /></el-icon>暂停</el-button
             >
-            <el-button @click="handlePause"
+            <el-button @click="handlePause" v-if="!upload"
               ><el-icon><VideoPlay /></el-icon>恢复</el-button
             >
           </el-button-group>
@@ -171,14 +171,40 @@ async function mergeRequest() {
   file.value = null;
 }
 
+/**
+ * @description: 暂停/恢复上传
+ * @return {*}
+ */
 async function handlePause() {
   upload.value = !upload.value;
-  if (!upload.value) {
-  } else {
-    await uploadParts({
-      partList: partList.value,
-      hash: hash.value,
+  if (upload.value) {
+    // 检查是否有上传文件
+    if (!file.value?.name) {
+      return;
+    }
+
+    // 校验文件是否上传过
+    const { needUpload, uploadedList } = await verify({
+      fileName: file.value.name,
+      fileHash: hash.value,
     });
+    const newParts = partList.value.filter((item) => {
+      return !uploadedList.includes(item.hash || "");
+    });
+
+    // 如果上传过，不需要上传，秒传
+    if (!needUpload) {
+      ElMessage.success("秒传：上传成功");
+      return;
+    } else {
+      await uploadParts({
+        partList: newParts,
+        hash: hash.value,
+      });
+    }
+  } else {
+    // 暂停上传
+    abortAll();
   }
 }
 

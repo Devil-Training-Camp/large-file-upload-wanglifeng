@@ -10,6 +10,11 @@ import {
   UPLOAD_DIR,
 } from "../utils";
 
+/**
+ * @description: 判断文件是否上传过
+ * @param {Context} ctx
+ * @return {*}
+ */
 export const verifyController = async (ctx: Context) => {
   const { fileName, fileHash } = ctx.request.body as VerifyPartParams;
   if (!isValidString(fileName)) {
