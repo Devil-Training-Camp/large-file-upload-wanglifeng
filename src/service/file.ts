@@ -22,12 +22,7 @@ const service = axios.create({
  * @description: 向服务端发起上传切片请求
  * @return {*} 返回上传结果
  */
-export const uploadPart = async (
-  params: UploadPartControllerParams,
-  onTick: (index: number, percent: number) => void,
-  index: number,
-  signal?: AbortSignal,
-) => {
+export const uploadPart = async (params: UploadPartControllerParams) => {
   const { part, hash, fileHash, fileName, size } = params;
   const formData = new FormData();
   formData.append("part", part);
