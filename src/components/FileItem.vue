@@ -15,25 +15,8 @@
           </div>
           <div v-else class="item-progress">
             <span>文件进度：</span>
-            <el-progress :percentage="item.uploadProgress" />
+            <el-progress :percentage="item.totalPercentage" />
           </div>
-        </div>
-        <div class="item-chunk-box">
-          <el-table border max-height="300">
-            <el-table-column prop="index" label="#" align="center" />
-            <el-table-column
-              prop="hash"
-              label="切片md5"
-              align="center"
-              show-overflow-tooltip
-            />
-            <el-table-column label="大小" align="center" width="120">
-            </el-table-column>
-            <el-table-column prop="uploaded" label="是否完成" align="center">
-            </el-table-column>
-
-            <el-table-column label="进度" align="center"> </el-table-column>
-          </el-table>
         </div>
       </el-collapse-item>
     </el-collapse>
@@ -41,11 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import type { UploadFile } from "element-plus";
-import { UploadedFile } from "@/types/file";
 defineProps({
   fileList: {
-    type: Array as () => (UploadedFile | UploadFile)[],
+    type: Array,
     default: () => [],
   },
 });
@@ -60,9 +41,6 @@ defineProps({
     justify-items: center;
     line-height: 25px;
     position: relative;
-    &:hover .item-chunk-box {
-      display: block;
-    }
     div {
       flex: 1;
       margin-top: 6px;
@@ -88,18 +66,9 @@ defineProps({
         color: #f00;
       }
     }
-    .item-chunk-box {
-      display: none;
-      transition: all 3s;
-      position: absolute;
-      top: 0;
-      left: 40px;
-      z-index: 10;
-    }
     .item-progress {
       flex: 0 0 60%;
     }
   }
 }
 </style>
-@/types/file

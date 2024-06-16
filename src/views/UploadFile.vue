@@ -27,7 +27,7 @@
       </div>
     </div>
     <div class="file-wrapper">
-      <FileItem />
+      <FileItem :fileList="fileList" />
     </div>
   </div>
 </template>
@@ -39,7 +39,6 @@ import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
 import {
   Part,
-  UploadedFile,
   UploadPartControllerParams,
   UploadPartParams,
 } from "@/types/file";
@@ -50,6 +49,7 @@ import { splitChunks } from "../utils/chunk";
 import { fileStorageDBService } from "@/utils/fileStorageDBService";
 
 const file = ref<File | null>(null);
+let fileList = [];
 const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const hash = ref<string>("");
@@ -81,6 +81,13 @@ function handleChange(e) {
     return;
   }
   file.value = fileObj;
+
+  fileList.push({
+    name: file.value!.name,
+    size: file.value!.size,
+    hashProgress: 0,
+    totalPercentage: 0,
+  });
 }
 
 /**

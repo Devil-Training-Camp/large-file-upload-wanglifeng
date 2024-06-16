@@ -71,16 +71,3 @@ export interface UploadPartParams {
   // 请求数量限制
   limit?: number;
 }
-
-export interface UploadedFile {
-  // 文件名
-  name: string;
-  // 文件已上传大小
-  uploadedSize: number;
-  // 文件总大小
-  totalSize: number;
-  // 操作时间
-  time: string;
-  // 文件 hash 值
-  hash: string;
-}
