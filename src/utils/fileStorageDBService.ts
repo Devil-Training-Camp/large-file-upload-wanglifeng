@@ -1,3 +1,5 @@
+import { Store } from "@/types/fileStorage";
+
 class fileStorageDBService {
   // 数据库名称
   dbName: string;
@@ -12,7 +14,7 @@ class fileStorageDBService {
     this.db = null;
   }
 
-  async openDB(stores: any) {
+  async openDB(stores: Store) {
     const request = window.indexedDB.open(this.dbName, this.dbVersion);
     return new Promise((resolve, reject) => {
       request.onsuccess = (event) => {
@@ -87,6 +89,10 @@ class fileStorageDBService {
         reject(event);
       };
     });
+  }
+
+  closeDB() {
+    this.db!.close();
   }
 }
 

@@ -6,7 +6,7 @@ import {
   UploadPartControllerResponse,
   VerifyPartParams,
   VerifyPartResponse,
-} from "@/types";
+} from "@/types/file";
 import {
   API_MERGE_PART,
   API_UPLOAD_PART,

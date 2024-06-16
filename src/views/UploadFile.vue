@@ -33,8 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { CHUNK_SIZE } from "@/const";
+import { inject, onMounted, ref } from "vue";
+import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
 import {
@@ -42,11 +42,12 @@ import {
   UploadedFile,
   UploadPartControllerParams,
   UploadPartParams,
-} from "@/types";
+} from "@/types/file";
 import { mergePart, uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
 import { calculateHash } from "../utils/hash";
 import { splitChunks } from "../utils/chunk";
+import { fileStorageDBService } from "@/utils/fileStorageDBService";
 
 const file = ref<File | null>(null);
 const partList = ref<Part[]>([]);
@@ -54,6 +55,19 @@ const upload = ref<boolean>(true);
 const hash = ref<string>("");
 const controllersMap = new Map<number, AbortController>();
 const totalPercentage = ref<number>(0);
+
+const fileStorageDB: fileStorageDBService = inject(
+  "fileStorageDB",
+) as fileStorageDBService;
+
+onMounted(async () => {
+  // 初始化 fileStorageDB 存储
+  await fileStorageDB.openDB({
+    [STORE_NAME]: {
+      indexs: [HASH_KEY],
+    },
+  });
+});
 
 /**
  * @description: 上传文件控件触发事件
@@ -251,3 +265,4 @@ function abortAll() {
   }
 }
 </style>
+@/types/file

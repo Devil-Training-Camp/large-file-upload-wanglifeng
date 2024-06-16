@@ -1,4 +1,4 @@
-import { Part } from "@/types";
+import { Part } from "@/types/file";
 import SparkMd5 from "spark-md5";
 
 const readChunk = (file: any) => {

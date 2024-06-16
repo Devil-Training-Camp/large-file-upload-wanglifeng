@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
+import { provide } from "vue";
+import fileStorageDBService from "./utils/fileStorageDBService";
+
+provide("fileStorageDB", fileStorageDBService);
 </script>
 
 <template>
@@ -8,5 +12,4 @@ import { RouterView } from "vue-router";
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

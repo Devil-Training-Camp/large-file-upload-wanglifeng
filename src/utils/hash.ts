@@ -1,4 +1,4 @@
-import { Part } from "@/types";
+import { Part } from "@/types/file";
 import Worker from "../utils/hash_worker.ts?worker";
 
 /**

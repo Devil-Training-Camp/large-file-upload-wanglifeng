@@ -1,5 +1,5 @@
 import { CHUNK_SIZE } from "@/const";
-import { Part } from "@/types";
+import { Part } from "@/types/file";
 
 /**
  * @description: 大文件切片

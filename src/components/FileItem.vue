@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import type { UploadFile } from "element-plus";
-import { UploadedFile } from "@/types";
+import { UploadedFile } from "@/types/file";
 defineProps({
   fileList: {
     type: Array as () => (UploadedFile | UploadFile)[],
@@ -102,3 +102,4 @@ defineProps({
   }
 }
 </style>
+@/types/file
