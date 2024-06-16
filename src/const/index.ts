@@ -15,6 +15,15 @@ export const STATUS = {
   fail: "fail", // 超过重试次数后仍然失败
 };
 
+// 文件上传状态
+export const UPLOAD_STATUS = {
+  waiting: "waiting", // 等待用户开始上传
+  uploading: "uploading", // 正在上传
+  abort: "abort", // 暂停上传
+  success: "success", // 后端文件合并完毕，文件秒传时也应该是这个状态
+  fail: "fail", // 上传失败
+};
+
 export const STORE_NAME = "fileSliceStore";
 
 export const HASH_KEY = "hashKey";

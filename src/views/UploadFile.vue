@@ -33,8 +33,8 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onMounted, ref } from "vue";
-import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
+import { computed, inject, onMounted, ref, watch } from "vue";
+import { CHUNK_SIZE, HASH_KEY, STORE_NAME, UPLOAD_STATUS } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
 import {
@@ -53,6 +53,7 @@ const partList = ref<Part[]>([]);
 const upload = ref<boolean>(true);
 const hash = ref<string>("");
 const controllersMap = new Map<number, AbortController>();
+let curStatus: string = UPLOAD_STATUS.waiting;
 let uploadedLen: number = 0; // 已上传切片数量
 let chunksLen: number = 0; // 总切片数量
 
@@ -67,6 +68,13 @@ onMounted(async () => {
       indexs: [HASH_KEY],
     },
   });
+});
+
+// 文件上传进度
+const uploadPercent = computed(() => {
+  if (curStatus === UPLOAD_STATUS.waiting) return 0;
+  if (curStatus === UPLOAD_STATUS.success) return 100;
+  return Math.floor((100 * uploadedLen) / chunksLen);
 });
 
 /**
@@ -95,6 +103,7 @@ const handleUpload = async () => {
 
   // 1.生成文件切片
   const filePartList: Part[] = splitChunks(file.value);
+  chunksLen = filePartList.length;
   // 2.计算 hash 值
   hash.value = await calculateHash(filePartList);
   let fileName: string = file.value.name,
@@ -104,6 +113,7 @@ const handleUpload = async () => {
   uploadedLen = uploadedList.length;
   // 如果上传过，不需要上传，秒传
   if (!needUpload) {
+    curStatus = UPLOAD_STATUS.success;
     ElMessage.success("秒传：上传成功");
     return;
   }
@@ -129,6 +139,7 @@ const handleUpload = async () => {
  * @return {*}
  */
 async function uploadParts({ partList, hash, limit = 3 }: UploadPartParams) {
+  curStatus = UPLOAD_STATUS.uploading;
   // 1.定义任务调度器
   const scheduler = new Scheduler(limit);
   // 2.遍历切片列表，将切片上传任务添加到任务调度
@@ -158,6 +169,7 @@ async function uploadParts({ partList, hash, limit = 3 }: UploadPartParams) {
   if (status == "success") {
     mergeRequest();
   } else {
+    curStatus = UPLOAD_STATUS.fail;
     ElMessage.error("文件上传失败");
   }
 }
@@ -173,6 +185,8 @@ async function mergeRequest() {
     fileHash: hash.value,
   });
   file.value = null;
+  curStatus = UPLOAD_STATUS.success;
+  ElMessage.success("文件上传成功");
 }
 
 /**
@@ -198,6 +212,7 @@ async function handlePause() {
 
     // 如果上传过，不需要上传，秒传
     if (!needUpload) {
+      curStatus = UPLOAD_STATUS.success;
       ElMessage.success("秒传：上传成功");
       return;
     } else {
@@ -207,20 +222,10 @@ async function handlePause() {
       });
     }
   } else {
+    curStatus = UPLOAD_STATUS.abort;
     // 暂停上传
     abortAll();
   }
-}
-
-/**
- * @description: 上传进度监听函数
- * @param {*} item
- * @return {*}
- */
-function onProgress(item: Part) {
-  return (e) => {
-    item.percentage = parseInt(String((e.loaded / e.total) * 100));
-  };
 }
 
 function abortAll() {
