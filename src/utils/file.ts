@@ -2,6 +2,7 @@
  * @description: 把字节转换成正常文件大小
  * @return {*}  返回文件正常大小带单位
  */
+// 可以用这个：https://www.npmjs.com/package/pretty-size
 export function getFileSize(size:number) {
   if (!size)  return "";
   var num = 1024.00; //byte

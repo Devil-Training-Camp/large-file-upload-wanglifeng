@@ -1,4 +1,5 @@
 <template>
+  <!-- 这个文件太太太大了，得拆一下 -->
   <div class="upload-container">
     <div class="upload-wrapper">
       <div class="btn-list">
@@ -49,12 +50,17 @@ import { calculateHash } from "../utils/hash";
 import { splitChunks } from "../utils/chunk";
 import { fileStorageDBService } from "@/utils/fileStorageDBService";
 
+// 下面这三个变量，单从变量名来看完全看不出啥意思
 const file = ref<File | null>(null);
 const fileList = ref<FileData[]>([]);
 const partList = ref<Part[]>([]);
+// 这个变量又是啥意思？
 const upload = ref<boolean>(true);
 const hash = ref<string>("");
+// 这里为什么用 number 做 key？索引吗？
 const controllersMap = new Map<number, AbortController>();
+// 不要有全局变量。。。
+// FP 里面有一个很重要的概念就是不要有副作用，这种依赖全局变量的设计，都不好
 let fileIndex: number = 0; // 正在被遍历的文件下标
 
 const fileStorageDB: fileStorageDBService = inject(
@@ -75,7 +81,9 @@ onMounted(async () => {
  * @param {*} e
  * @return {*}
  */
+// e 要有类型标注
 function handleChange(e) {
+  // 这个事件里面需不需要清理上次 files 状态？
   const files = e.target.files;
   if (!files) {
     return;
