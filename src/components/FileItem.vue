@@ -1,23 +1,23 @@
 <template>
   <div class="file-list">
-      <template v-for="(item, index) in fileList" :key="index">
-        <div class="progress-box">
-          <div class="list-item">
-            <div class="item-name">
-              <span>{{ index + 1 }}名称：{{ item.name }}</span>
-            </div>
-            <div class="item-size">大小：{{ getFileSize(item.size) }}</div>
+    <template v-for="(item, index) in fileList" :key="index">
+      <div class="progress-box">
+        <div class="list-item">
+          <div class="item-name">
+            <span>{{ index + 1 }}. 名称：{{ item.name }}</span>
           </div>
-          <div v-if="item.hashProgress !== 100" class="item-progress">
-            <span></span>
-            <el-progress :percentage="item.hashPercentage" />
-          </div>
-          <div v-else class="item-progress">
-            <span>文件进度：</span>
-            <el-progress :percentage="item.totalPercentage" />
-          </div>
+          <div class="item-size">大小：{{ getFileSize(item.size) }}</div>
         </div>
-      </template>
+        <div class="item-progress">
+          <span>切片上传进度：</span>
+          <el-progress :percentage="item.hashPercentage" />
+        </div>
+        <div class="item-progress">
+          <span>文件进度：</span>
+          <el-progress :percentage="item.totalPercentage" />
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 

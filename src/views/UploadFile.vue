@@ -93,6 +93,8 @@ function handleChange(e) {
  * @return {*}
  */
 function handleUpload(rawFile: FileData) {
+  rawFile.totalPercentage = 0;
+  rawFile.hashPercentage = 0;
   fileList.value.push(rawFile);
 }
 
@@ -196,7 +198,6 @@ async function uploadParts({
       (sum, part) => sum + (part.percentage || 0),
       0,
     );
-
     const totalProgress =
       (newPartsProgress + uploadedParts * 100) / totalPartsCount;
     fileList.value[fileIndex].totalPercentage = Number(
