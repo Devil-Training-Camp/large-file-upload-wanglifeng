@@ -8,6 +8,8 @@ import { FAIL, PENDING, STATUS, SUCCESS } from "./../const/index";
  */
 class Scheduler {
   private queue: taskType[] = []; // 任务数组
+  // 既然跟 queue 一一对应，似乎并务必要额外增加这个属性？
+  // 奥卡姆剃刀原理
   private promises: Promise<{ fileHash: string }>[] = []; //任务结果数组，顺序与任务添加顺序对应
   private settledCount: number = 0; // 已经有结果的任务数量
   private maxCount: number; // 最大并发量

@@ -96,6 +96,7 @@ class fileStorageDBService {
   }
 }
 
+// good
 const fileStorageDB = new fileStorageDBService("database", 1);
 export default fileStorageDB;
 

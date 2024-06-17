@@ -20,6 +20,7 @@ export const UPLOAD_DIR = path.resolve(__dirname, "..", "target");
  * @return {*}
  */
 export const extractExt = (filename: string): string =>
+  // path.extname
   filename.slice(filename.lastIndexOf(".", filename.length));
 
 /**
