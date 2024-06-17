@@ -27,6 +27,10 @@ export interface UploadPartParams {
   partList: Part[];
   // 文件hash
   hash: string;
+  // 切片总数
+  totalPartsCount: number;
+  // 已经上传的切片数
+  uploadedParts: number;
   // 请求数量限制
   limit?: number;
 }

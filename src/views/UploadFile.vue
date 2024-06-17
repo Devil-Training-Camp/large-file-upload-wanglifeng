@@ -58,7 +58,7 @@ const controllersMap = new Map<number, AbortController>();
 let fileIndex: number = 0; // 正在被遍历的文件下标
 
 const fileStorageDB: fileStorageDBService = inject(
-  "fileStorageDB"
+  "fileStorageDB",
 ) as fileStorageDBService;
 
 onMounted(async () => {
@@ -92,7 +92,7 @@ function handleChange(e) {
  * @param {*} rawFile
  * @return {*}
  */
-function handleUpload(rawFile:FileData) {
+function handleUpload(rawFile: FileData) {
   fileList.value.push(rawFile);
 }
 
@@ -133,6 +133,8 @@ const submitUpload = async () => {
       fileItem: fileList.value[i],
       partList: partList.value,
       hash: hash.value,
+      totalPartsCount: partList.value.length,
+      uploadedParts: 0,
     });
   }
 };
@@ -148,6 +150,8 @@ async function uploadParts({
   fileItem,
   partList,
   hash,
+  totalPartsCount,
+  uploadedParts,
   limit = 3,
 }: UploadPartParams) {
   // 1.定义任务调度器
@@ -168,8 +172,12 @@ async function uploadParts({
       size: fileItem.size,
     } as UploadPartControllerParams;
 
+    const controller = new AbortController();
+    controllersMap.set(i, controller);
+    const { signal } = controller;
+
     const taskFn = async () => {
-      return await uploadPart(params);
+      return await uploadPart(params, onTick, i, signal);
     };
     scheduler.add(taskFn, i);
   }
@@ -180,6 +188,20 @@ async function uploadParts({
     mergeRequest(fileItem);
   } else {
     ElMessage.error("文件上传失败");
+  }
+
+  function onTick(index: number, percent: number) {
+    partList[index].percentage = percent;
+    const newPartsProgress = partList.reduce(
+      (sum, part) => sum + (part.percentage || 0),
+      0,
+    );
+
+    const totalProgress =
+      (newPartsProgress + uploadedParts * 100) / totalPartsCount;
+    fileList.value[fileIndex].totalPercentage = Number(
+      totalProgress.toFixed(2),
+    );
   }
 }
 
@@ -227,6 +249,8 @@ async function handlePause() {
         fileItem: currentFile,
         partList: newParts,
         hash: hash.value,
+        totalPartsCount: partList.value.length,
+        uploadedParts: partList.value.length - newParts.length,
       });
     }
   } else {
