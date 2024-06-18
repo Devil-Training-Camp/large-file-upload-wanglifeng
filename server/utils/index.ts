@@ -19,8 +19,7 @@ export const UPLOAD_DIR = path.resolve(__dirname, "..", "target");
  * @param {string} 文件名称 filename
  * @return {*}
  */
-export const extractExt = (filename: string): string =>
-  filename.slice(filename.lastIndexOf(".", filename.length));
+export const extractExt = (filename: string): string => path.extname(filename);
 
 /**
  * @description: 创建临时文件夹用于临时存储 chunk

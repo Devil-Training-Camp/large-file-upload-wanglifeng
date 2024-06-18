@@ -6,7 +6,7 @@
           <div class="item-name">
             <span>{{ index + 1 }}. 名称：{{ item.name }}</span>
           </div>
-          <div class="item-size">大小：{{ getFileSize(item.size) }}</div>
+          <div class="item-size">大小：{{ prettysize(item.size) }}</div>
         </div>
         <div class="item-progress">
           <span>切片上传进度：</span>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { getFileSize } from "../utils/file";
+import prettysize from "prettysize";
 defineProps({
   fileList: {
     type: Array,
