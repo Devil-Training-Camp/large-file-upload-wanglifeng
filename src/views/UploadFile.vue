@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref } from "vue";
 import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
@@ -293,4 +293,4 @@ function abortAll() {
   }
 }
 </style>
-@/types/file
+@/types/file ../utils/chunk
