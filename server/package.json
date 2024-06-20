@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "DEBUG=@demo/* NODE_ENV=development node -r sucrase/register app.ts"
+    "dev": "node -r sucrase/register app.ts"
   },
   "keywords": [],
   "dependencies": {

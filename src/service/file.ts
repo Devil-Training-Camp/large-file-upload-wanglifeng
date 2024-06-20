@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  FileData,
   MergePartsControllerParams,
   MergePartsControllerResponse,
   UploadPartControllerParams,
@@ -13,6 +14,7 @@ import {
   API_VERIFY,
   BASE_URL,
 } from "./config";
+import { CHUNK_SIZE } from "@/const";
 
 const service = axios.create({
   baseURL: BASE_URL,
@@ -59,6 +61,19 @@ export const verify = async (params: VerifyPartParams) => {
   const res = await service.post<VerifyPartResponse>(API_VERIFY, params);
   return res.data.data;
 };
+
+/**
+ * @description: 文件合并
+ * @param {FileData} fileItem
+ * @return {*}
+ */
+export const mergeRequest = async (fileItem: FileData, hash:string) => {
+  await mergePart({
+    fileName: fileItem.name as string,
+    size: CHUNK_SIZE,
+    fileHash: hash,
+  });
+}
 
 /**
  * @description: 向服务端发起切片合并请求

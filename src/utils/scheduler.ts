@@ -40,6 +40,7 @@ class Scheduler {
         task.status = STATUS.running;
         const pFn = task.handler();
         this.promises[task.index] = pFn;
+        
         pFn
           .then(() => {
             task.status = STATUS.success;

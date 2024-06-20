@@ -9,7 +9,7 @@
               <input
                 type="file"
                 multiple
-                class="select-file-input"
+                class="select-file"
                 @change="handleChange"
               />
             </el-button>
@@ -37,28 +37,20 @@ import { inject, onMounted, ref } from "vue";
 import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
-import {
-  FileData,
-  Part,
-  UploadPartControllerParams,
-  UploadPartParams,
-} from "@/types/file";
-import { mergePart, uploadPart, verify } from "@/service/file";
+import { FileData, Part } from "@/types/file";
+import { uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
+import { splitChunks, uploadParts } from "../utils/file";
 import { calculateHash } from "../utils/hash";
-import { splitChunks } from "../utils/chunk";
 import { fileStorageDBService } from "@/utils/fileStorageDBService";
 
-const file = ref<File | null>(null);
-const fileList = ref<FileData[]>([]);
-const partList = ref<Part[]>([]);
+const fileList = ref<FileData[]>([]); // 上传文件列表
+const partList = ref<Part[]>([]); // 切片列表
 const upload = ref<boolean>(true);
-const hash = ref<string>("");
-const controllersMap = new Map<number, AbortController>();
-let fileIndex: number = 0; // 正在被遍历的文件下标
+const hash = ref<string>(""); // 文件 hash
 
 const fileStorageDB: fileStorageDBService = inject(
-  "fileStorageDB",
+  "fileStorageDB"
 ) as fileStorageDBService;
 
 onMounted(async () => {
@@ -70,38 +62,27 @@ onMounted(async () => {
   });
 });
 
-/**
- * @description: 上传文件控件触发事件
- * @param {*} e
- * @return {*}
- */
-function handleChange(e) {
-  const files = e.target.files;
-  if (!files) {
+// 上传文件控件触发事件
+function handleChange(e: Event) {
+  const postFiles = Array.prototype.slice.call(
+    (e.target as HTMLInputElement).files
+  );
+  if (!postFiles || postFiles.length == 0) {
     return;
   }
-  fileIndex = 0; // 重置文件下标
-  const postFiles = Array.prototype.slice.call(files);
   postFiles.forEach((item) => {
     handleUpload(item);
   });
 }
 
-/**
- * @description: 处理多文件上传
- * @param {*} rawFile
- * @return {*}
- */
+// 处理多文件上传
 function handleUpload(rawFile: FileData) {
   rawFile.totalPercentage = 0;
   rawFile.hashPercentage = 0;
   fileList.value.push(rawFile);
 }
 
-/**
- * @description: 上传切片文件到服务器
- * @return {*}
- */
+// 上传切片文件到服务器
 const submitUpload = async () => {
   if (!fileList) {
     ElMessage.error("您尚未上传文件！");
@@ -109,7 +90,6 @@ const submitUpload = async () => {
   }
 
   for (let i = 0; i < fileList.value.length; i++) {
-    fileIndex = i; // 获取文件索引，方便暂停/恢复
     // 1.生成文件切片
     const filePartList: Part[] = splitChunks(fileList.value[i]);
     // 2.计算 hash 值
@@ -131,141 +111,61 @@ const submitUpload = async () => {
       index,
       progress: 0,
     }));
-    await uploadParts({
-      fileItem: fileList.value[i],
-      partList: partList.value,
-      hash: hash.value,
-      totalPartsCount: partList.value.length,
-      uploadedParts: 0,
-    });
+    await uploadParts(
+      {
+        fileItem: fileList.value[i],
+        partList: partList.value,
+        hash: hash.value,
+        totalPartsCount: partList.value.length,
+        uploadedParts: 0,
+      },
+      fileList.value,
+      i
+    );
   }
 };
 
-/**
- * @description: 上传切片
- * @param {*} partList 切片列表
- * @param {*} hash 文件 hash值
- * @param {*} limit 最大请求数
- * @return {*}
- */
-async function uploadParts({
-  fileItem,
-  partList,
-  hash,
-  totalPartsCount,
-  uploadedParts,
-  limit = 3,
-}: UploadPartParams) {
-  // 1.定义任务调度器
-  const scheduler = new Scheduler(limit);
-  // 2.遍历切片列表，将切片上传任务添加到任务调度
-  for (let i = 0; i < partList.length; i++) {
-    const { chunk } = partList[i];
-
-    let pHash = partList[i].hash
-      ? (partList[i].hash as string)
-      : `${hash}-${partList.indexOf(partList[i])}`;
-
-    const params = {
-      part: chunk,
-      hash: pHash,
-      fileHash: hash,
-      fileName: fileItem.name as string,
-      size: fileItem.size,
-    } as UploadPartControllerParams;
-
-    const controller = new AbortController();
-    controllersMap.set(i, controller);
-    const { signal } = controller;
-
-    const taskFn = async () => {
-      return await uploadPart(params, onTick, i, signal);
-    };
-    scheduler.add(taskFn, i);
-  }
-  // 3.执行任务
-  const { status } = await scheduler.done();
-  // 4.任务执行成功，合并切片
-  if (status == "success") {
-    mergeRequest(fileItem);
-  } else {
-    ElMessage.error("文件上传失败");
-  }
-
-  function onTick(index: number, percent: number) {
-    partList[index].percentage = percent;
-    const newPartsProgress = partList.reduce(
-      (sum, part) => sum + (part.percentage || 0),
-      0,
-    );
-    const totalProgress =
-      (newPartsProgress + uploadedParts * 100) / totalPartsCount;
-    fileList.value[fileIndex].totalPercentage = Number(
-      totalProgress.toFixed(2),
-    );
-  }
-}
-
-/**
- * @description: 切片合并请求
- * @return {*}
- */
-async function mergeRequest(fileItem: FileData) {
-  await mergePart({
-    fileName: fileItem.name as string,
-    size: CHUNK_SIZE,
-    fileHash: hash.value,
-  });
-  ElMessage.success("文件上传成功");
-}
-
-/**
- * @description: 暂停/恢复上传
- * @return {*}
- */
+// 暂停/恢复上传
 async function handlePause() {
   upload.value = !upload.value;
-  const currentFile = fileList.value[fileIndex];
   if (upload.value) {
     // 检查是否有上传文件
-    if (!file.value?.name) {
+    if (!fileList.value || fileList.value.length == 0) {
       return;
     }
-
-    // 校验文件是否上传过
-    const { needUpload, uploadedList } = await verify({
-      fileName: currentFile.name,
-      fileHash: hash.value,
-    });
-    const newParts = partList.value.filter((item) => {
-      return !uploadedList.includes(item.hash || "");
-    });
-
-    // 如果上传过，不需要上传，秒传
-    if (!needUpload) {
-      ElMessage.success("秒传：上传成功");
-      return;
-    } else {
-      await uploadParts({
-        fileItem: currentFile,
-        partList: newParts,
-        hash: hash.value,
-        totalPartsCount: partList.value.length,
-        uploadedParts: partList.value.length - newParts.length,
+    for (let i = 0; i < fileList.value.length; i++) {
+      const currentFile = fileList.value[i];
+      // 校验文件是否上传过
+      const { needUpload, uploadedList } = await verify({
+        fileName: currentFile.name,
+        fileHash: hash.value,
       });
+      const newParts = partList.value.filter((item) => {
+        return !uploadedList.includes(item.hash || "");
+      });
+
+      // 如果上传过，不需要上传，秒传
+      if (!needUpload) {
+        ElMessage.success("秒传：上传成功");
+        return;
+      } else {
+        await uploadParts(
+          {
+            fileItem: currentFile,
+            partList: newParts,
+            hash: hash.value,
+            totalPartsCount: partList.value.length,
+            uploadedParts: partList.value.length - newParts.length,
+          },
+          fileList.value,
+          i
+        );
+      }
     }
   } else {
     // 暂停上传
-    abortAll();
+    // abortAll();
   }
-}
-
-// 所有请求暂停
-function abortAll() {
-  controllersMap.forEach((controller, index) => {
-    controller.abort();
-  });
-  controllersMap.clear();
 }
 </script>
 
@@ -293,4 +193,3 @@ function abortAll() {
   }
 }
 </style>
-@/types/file ../utils/chunk
