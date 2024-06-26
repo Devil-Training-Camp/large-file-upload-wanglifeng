@@ -9,7 +9,7 @@
               <input
                 type="file"
                 multiple
-                class="select-file"
+                class="select-file-input"
                 @change="handleChange"
               />
             </el-button>
@@ -50,7 +50,7 @@ const upload = ref<boolean>(true);
 const hash = ref<string>(""); // 文件 hash
 
 const fileStorageDB: fileStorageDBService = inject(
-  "fileStorageDB"
+  "fileStorageDB",
 ) as fileStorageDBService;
 
 onMounted(async () => {
@@ -65,7 +65,7 @@ onMounted(async () => {
 // 上传文件控件触发事件
 function handleChange(e: Event) {
   const postFiles = Array.prototype.slice.call(
-    (e.target as HTMLInputElement).files
+    (e.target as HTMLInputElement).files,
   );
   if (!postFiles || postFiles.length == 0) {
     return;
@@ -120,7 +120,7 @@ const submitUpload = async () => {
         uploadedParts: 0,
       },
       fileList.value,
-      i
+      i,
     );
   }
 };
@@ -158,7 +158,7 @@ async function handlePause() {
             uploadedParts: partList.value.length - newParts.length,
           },
           fileList.value,
-          i
+          i,
         );
       }
     }

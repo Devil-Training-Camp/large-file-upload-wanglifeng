@@ -8,26 +8,12 @@ import {
 } from "../utils";
 import { HttpError, HttpStatus } from "../utils/http-error";
 import path from "path";
+import { pipeline } from "stream/promises";
 import fs from "fs-extra";
 import {
   MergePartsControllerParams,
   MergePartsControllerResponse,
 } from "../utils/types";
-
-const pipeStream = (path: string, writeStream) => {
-  return new Promise((resolve, reject) => {
-    // 创建可读流
-    const readStream = fs.createReadStream(path);
-    readStream.on("end", async () => {
-      fs.unlinkSync(path);
-      resolve(true);
-    });
-    readStream.on("error", (error) => {
-      reject(error);
-    });
-    readStream.pipe(writeStream);
-  });
-};
 
 /**
  * 合并切片
@@ -49,9 +35,9 @@ export const mergePart = async (
   // 并发写入文件
   await Promise.all(
     chunkPaths.map((chunkPath, index) =>
-      pipeStream(
+      pipeline(
         // 指定位置创建可写流
-        path.resolve(chunkDir, chunkPath),
+        fs.createReadStream(path.resolve(chunkDir, chunkPath)),
         fs.createWriteStream(filePath, {
           start: index * size,
         }),
