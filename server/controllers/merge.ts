@@ -45,7 +45,7 @@ export const mergePart = async (
     ),
   );
   // 合并后删除保存切片的目录
-  await fs.rmdir(chunkDir);
+  await fs.rmSync(chunkDir, { recursive: true });
 };
 
 export const mergeController = async (ctx: Context) => {

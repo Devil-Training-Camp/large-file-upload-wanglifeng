@@ -1,6 +1,5 @@
 import axios from "axios";
 import {
-  FileData,
   MergePartsControllerParams,
   MergePartsControllerResponse,
   UploadPartControllerParams,
@@ -64,12 +63,11 @@ export const verify = async (params: VerifyPartParams) => {
 
 /**
  * @description: 文件合并
- * @param {FileData} fileItem
  * @return {*}
  */
-export const mergeRequest = async (fileItem: FileData, hash:string) => {
+export const mergeRequest = async (fileName:string, hash:string) => {
   await mergePart({
-    fileName: fileItem.name as string,
+    fileName: fileName,
     size: CHUNK_SIZE,
     fileHash: hash,
   });

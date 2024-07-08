@@ -8,7 +8,6 @@ import { FAIL, PENDING, STATUS, SUCCESS } from "./../const/index";
  */
 class Scheduler {
   private queue: taskType[] = []; // 任务数组
-  private promises: Promise<{ fileHash: string }>[] = []; //任务结果数组，顺序与任务添加顺序对应
   private settledCount: number = 0; // 已经有结果的任务数量
   private maxCount: number; // 最大并发量
   private retryTime: number; // 重试次数
@@ -39,8 +38,6 @@ class Scheduler {
         const task = this.queue[index];
         task.status = STATUS.running;
         const pFn = task.handler();
-        this.promises[task.index] = pFn;
-        
         pFn
           .then(() => {
             task.status = STATUS.success;
@@ -76,12 +73,10 @@ class Scheduler {
     });
   }
   done() {
-    return this.run().then(() =>
-      Promise.allSettled(this.promises).then((res) => ({
-        status: this.status,
-        res,
-      })),
-    );
+    return this.run().then((res) => ({
+      status: this.status,
+      res,
+    }))
   }
 }
 

@@ -1,5 +1,5 @@
 import { CHUNK_SIZE } from "@/const";
-import { FileData, Part, UploadPartControllerParams, UploadPartParams } from "@/types/file";
+import { Part, UploadPartControllerParams, UploadPartParams } from "@/types/file";
 import Scheduler from "./scheduler";
 import { mergeRequest, uploadPart } from "@/service/file";
 import { ElMessage } from "element-plus";
@@ -23,63 +23,71 @@ export const splitChunks = (file: any): Part[] => {
   return partList;
 };
 
-
 /**
  * @description: 上传切片
  * @return {*}
  */
 export const uploadParts = async ({
-  fileItem,
-  partList,
-  hash,
-  totalPartsCount,
-  uploadedParts,
+  fileArr,
   limit = 3,
-}: UploadPartParams, fileList: FileData[] = [], index: number) => {
+}: UploadPartParams, controller: AbortController | null) => {
   // 1.定义任务调度器
+  let totalPartList = [];
   const scheduler = new Scheduler(limit);
   // 2.遍历切片列表，将切片上传任务添加到任务调度
-  for (let i = 0; i < partList.length; i++) {
-    const { chunk } = partList[i];
+  for (let i = 0; i < fileArr.length; i++) {
+    const partList = fileArr[i].partList!;
+    totalPartList.push(...partList);
+    for (let j = 0; j < partList.length; j++) {
+      const { chunk } = partList[j];
 
-    let pHash = partList[i].hash
-      ? (partList[i].hash as string)
-      : `${hash}-${partList.indexOf(partList[i])}`;
+      let pHash = partList[j].hash
+        ? (partList[j].hash as string)
+        : `${fileArr[i].fileHash}-${partList.indexOf(partList[j])}`;
 
-    const params = {
-      part: chunk,
-      hash: pHash,
-      fileHash: hash,
-      fileName: fileItem.name as string,
-      size: fileItem.size,
-    } as UploadPartControllerParams;
+      const params = {
+        part: chunk,
+        hash: pHash,
+        fileHash: fileArr[i].fileHash,
+        fileName: fileArr[i].name as string,
+        size: fileArr[i].size,
+      } as UploadPartControllerParams;
 
-    const taskFn = async () => {
-      return await uploadPart(params, onTick, index, signal);
-    };
-    scheduler.add(taskFn, index);
+      if (!controller) {
+        controller = new AbortController();
+      }
+      const { signal } = controller;
+
+      const taskFn = async () => {
+        return await uploadPart(params, onTick, j, signal);
+      };
+      scheduler.add(taskFn, j);
+    }
   }
   // 3.执行任务
   const { status } = await scheduler.done();
+
   // 4.任务执行成功，合并切片
   if (status == "success") {
-    mergeRequest(fileItem, hash);
+    for (let k = 0; k < fileArr.length; k++) {
+      mergeRequest(fileArr[k].name, fileArr[k].fileHash!);
+    }
     ElMessage.success("文件上传成功");
   } else {
     ElMessage.error("文件上传失败");
   }
 
   function onTick(index: number, percent: number) {
-    partList[index].percentage = percent;
-    const newPartsProgress = partList.reduce(
-      (sum, part) => sum + (part.percentage || 0),
-      0,
-    );
-    const totalProgress =
-      (newPartsProgress + uploadedParts * 100) / totalPartsCount;
-    fileList[index].totalPercentage = Number(
-      totalProgress.toFixed(2),
-    );
+    // partList[index].percentage = percent;
+    // const newPartsProgress = partList.reduce(
+    //   (sum, part) => sum + (part.percentage || 0),
+    //   0,
+    // );
+    // const totalProgress =
+    //   (newPartsProgress + uploadedParts * 100) / totalPartsCount;
+    // fileList[index].totalPercentage = Number(
+    //   totalProgress.toFixed(2),
+    // );
   }
 }
 

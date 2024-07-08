@@ -1,12 +1,19 @@
+// 上传文件参数
 export interface FileData {
+  // 文件内容
+  file?: File;
   // 文件名称
   name: string;
   // 文件大小
   size: number;
-  // hash上传进度
-  hashPercentage: number;
-  // 文件上传进度
-  totalPercentage: number;
+  // 文件 hash
+  fileHash?: string;
+  // 是否正在上传
+  uploading: boolean;
+  // 切片列表
+  partList?: Part[],
+  // 上传进度
+  uploadPercentage: number;
 }
 
 // 切片类
@@ -22,15 +29,7 @@ export interface Part {
 }
 
 export interface UploadPartParams {
-  fileItem: FileData;
-  // 切片列表
-  partList: Part[];
-  // 文件hash
-  hash: string;
-  // 切片总数
-  totalPartsCount: number;
-  // 已经上传的切片数
-  uploadedParts: number;
+  fileArr: FileData[]
   // 请求数量限制
   limit?: number;
 }
