@@ -25,9 +25,8 @@ const service = axios.create({
  */
 export const uploadPart = async (
   params: UploadPartControllerParams,
-  onTick: (index: number, pIndex:number, percent: number) => void,
+  onTick: (index: number, percent: number) => void,
   index: number,
-  pIndex: number,
   signal: AbortSignal,
 ) => {
   const { part, hash, fileHash, fileName, size } = params;
@@ -44,7 +43,7 @@ export const uploadPart = async (
       onUploadProgress: (progressEvent) => {
         const { loaded, total } = progressEvent;
         const percent = Math.floor((loaded / (total || 0)) * 100);
-        onTick(index, pIndex, percent);
+        onTick(index, percent);
       },
       signal,
     },
@@ -66,13 +65,13 @@ export const verify = async (params: VerifyPartParams) => {
  * @description: 文件合并
  * @return {*}
  */
-export const mergeRequest = async (fileName:string, hash:string) => {
+export const mergeRequest = async (fileName: string, hash: string) => {
   await mergePart({
     fileName: fileName,
     size: CHUNK_SIZE,
     fileHash: hash,
   });
-}
+};
 
 /**
  * @description: 向服务端发起切片合并请求

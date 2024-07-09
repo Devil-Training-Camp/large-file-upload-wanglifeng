@@ -1,12 +1,16 @@
 import { CHUNK_SIZE } from "@/const";
-import { Part, UploadPartControllerParams, UploadPartParams } from "@/types/file";
+import {
+  Part,
+  UploadPartControllerParams,
+  UploadPartParams,
+} from "@/types/file";
 import Scheduler from "./scheduler";
 import { mergeRequest, uploadPart } from "@/service/file";
 import { ElMessage } from "element-plus";
 
 /**
  * @description: 大文件切片
- * @param {any} 大文件 file 
+ * @param {any} 大文件 file
  * @return {*} 返回切片列表
  */
 export const splitChunks = (file: any): Part[] => {
@@ -27,10 +31,10 @@ export const splitChunks = (file: any): Part[] => {
  * @description: 上传切片
  * @return {*}
  */
-export const uploadParts = async ({
-  fileArr,
-  limit = 3,
-}: UploadPartParams, controllersMap: Map<number, AbortController>) => {
+export const uploadParts = async (
+  { fileArr, limit = 3 }: UploadPartParams,
+  controllersMap: Map<number, AbortController>,
+) => {
   // 1.定义任务调度器
   const scheduler = new Scheduler(limit);
   // 2.遍历切片列表，将切片上传任务添加到任务调度
@@ -56,7 +60,7 @@ export const uploadParts = async ({
       const { signal } = controller;
 
       const taskFn = async () => {
-        return await uploadPart(params, onTick, i, j, signal);
+        return await uploadPart(params, onTick, i, signal);
       };
       scheduler.add(taskFn, j);
     }
@@ -73,21 +77,7 @@ export const uploadParts = async ({
     ElMessage.error("文件上传失败");
   }
 
-  function onTick(index: number, pIndex: number, percent: number) {
-    let partArr = fileArr[index].partList!;
-    if (fileArr[index].fileHash == partArr[pIndex].fileHash) {
-      partArr[pIndex].percentage = percent;
-      const newPartsProgress = partArr.reduce(
-        (sum, part) => sum + (part.percentage || 0),
-        0,
-      );
-      const totalProgress =
-        (newPartsProgress + pIndex * 100) / partArr.length;
-      fileArr[index].uploadPercentage = Number(
-        totalProgress.toFixed(2),
-      );
-    }
+  function onTick(index: number, percent: number) {
+    fileArr[index].uploadPercentage = percent > 100 ? 100 : percent;
   }
-}
-
-
+};
