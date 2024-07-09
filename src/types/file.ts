@@ -8,8 +8,6 @@ export interface FileData {
   size: number;
   // 文件 hash
   fileHash?: string;
-  // 是否正在上传
-  uploading: boolean;
   // 切片列表
   partList?: Part[],
   // 上传进度
@@ -18,6 +16,8 @@ export interface FileData {
 
 // 切片类
 export interface Part {
+  // 文件hash
+  fileHash?:string;
   // 切片大小
   size: number;
   // 切片
@@ -29,7 +29,8 @@ export interface Part {
 }
 
 export interface UploadPartParams {
-  fileArr: FileData[]
+  // 上传文件列表
+  fileArr: FileData[];
   // 请求数量限制
   limit?: number;
 }

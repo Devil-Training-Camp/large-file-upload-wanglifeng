@@ -9,12 +9,8 @@
           <div class="item-size">大小：{{ prettysize(item.size) }}</div>
         </div>
         <div class="item-progress">
-          <span>切片上传进度：</span>
-          <el-progress :percentage="item.hashPercentage" />
-        </div>
-        <div class="item-progress">
           <span>文件进度：</span>
-          <el-progress :percentage="item.totalPercentage" />
+          <el-progress :percentage="item.uploadPercentage" />
         </div>
       </div>
     </template>

@@ -30,14 +30,12 @@ export const splitChunks = (file: any): Part[] => {
 export const uploadParts = async ({
   fileArr,
   limit = 3,
-}: UploadPartParams, controller: AbortController | null) => {
+}: UploadPartParams, controllersMap: Map<number, AbortController>) => {
   // 1.定义任务调度器
-  let totalPartList = [];
   const scheduler = new Scheduler(limit);
   // 2.遍历切片列表，将切片上传任务添加到任务调度
   for (let i = 0; i < fileArr.length; i++) {
     const partList = fileArr[i].partList!;
-    totalPartList.push(...partList);
     for (let j = 0; j < partList.length; j++) {
       const { chunk } = partList[j];
 
@@ -53,20 +51,18 @@ export const uploadParts = async ({
         size: fileArr[i].size,
       } as UploadPartControllerParams;
 
-      if (!controller) {
-        controller = new AbortController();
-      }
+      const controller = new AbortController();
+      controllersMap.set(j, controller);
       const { signal } = controller;
 
       const taskFn = async () => {
-        return await uploadPart(params, onTick, j, signal);
+        return await uploadPart(params, onTick, i, j, signal);
       };
       scheduler.add(taskFn, j);
     }
   }
   // 3.执行任务
   const { status } = await scheduler.done();
-
   // 4.任务执行成功，合并切片
   if (status == "success") {
     for (let k = 0; k < fileArr.length; k++) {
@@ -77,17 +73,20 @@ export const uploadParts = async ({
     ElMessage.error("文件上传失败");
   }
 
-  function onTick(index: number, percent: number) {
-    // partList[index].percentage = percent;
-    // const newPartsProgress = partList.reduce(
-    //   (sum, part) => sum + (part.percentage || 0),
-    //   0,
-    // );
-    // const totalProgress =
-    //   (newPartsProgress + uploadedParts * 100) / totalPartsCount;
-    // fileList[index].totalPercentage = Number(
-    //   totalProgress.toFixed(2),
-    // );
+  function onTick(index: number, pIndex: number, percent: number) {
+    let partArr = fileArr[index].partList!;
+    if (fileArr[index].fileHash == partArr[pIndex].fileHash) {
+      partArr[pIndex].percentage = percent;
+      const newPartsProgress = partArr.reduce(
+        (sum, part) => sum + (part.percentage || 0),
+        0,
+      );
+      const totalProgress =
+        (newPartsProgress + pIndex * 100) / partArr.length;
+      fileArr[index].uploadPercentage = Number(
+        totalProgress.toFixed(2),
+      );
+    }
   }
 }
 

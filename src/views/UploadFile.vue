@@ -45,13 +45,12 @@ import { calculateHash } from "../utils/hash";
 import { fileStorageDBService } from "@/utils/fileStorageDBService";
 
 const fileList = ref<FileData[]>([]); // 上传文件列表
-const upload = ref<boolean>(true);
-
-// 初始化 AbortController 实例
-let controller: AbortController | null;
+const upload = ref<boolean>(true); // 判断是否可以暂停
+// 多文件上传使用切片索引做key，依次将请求放入controllersMap。暂停时统一控制
+const controllersMap = new Map<number, AbortController>();
 
 const fileStorageDB: fileStorageDBService = inject(
-  "fileStorageDB"
+  "fileStorageDB",
 ) as fileStorageDBService;
 
 onMounted(async () => {
@@ -80,7 +79,6 @@ const preDealFile = (file: File): FileData => {
   return {
     file,
     partList: [],
-    uploading: false,
     uploadPercentage: 0,
     name: file.name,
     size: file.size,
@@ -107,6 +105,7 @@ const submitUpload = async () => {
     const { needUpload } = await verify({ fileName, fileHash });
     // 如果上传过，不需要上传，秒传
     if (!needUpload) {
+      fileList.value[i].uploadPercentage = 100;
       ElMessage.success("秒传：上传成功");
       continue;
     }
@@ -119,20 +118,18 @@ const submitUpload = async () => {
       index,
     }));
   }
-
+  // 5.上传切片数据
   await uploadParts(
     {
       fileArr: fileList.value,
     },
-    controller
+    controllersMap,
   );
 };
 
 // 暂停/恢复上传
 async function handlePause() {
-  debugger;
   upload.value = !upload.value;
-
   if (upload.value) {
     // 检查是否有上传文件
     if (!fileList.value || fileList.value.length == 0) {
@@ -152,6 +149,7 @@ async function handlePause() {
 
       // 如果上传过，不需要上传，秒传
       if (!needUpload) {
+        fileList.value[i].uploadPercentage = 100;
         ElMessage.success("秒传：上传成功");
         return;
       } else {
@@ -159,18 +157,22 @@ async function handlePause() {
           {
             fileArr: fileList.value,
           },
-          controller
+          controllersMap,
         );
       }
     }
   } else {
-    debugger;
-    if (!controller) {
-      controller = new AbortController();
-    }
     // 暂停上传
-    controller?.abort();
+    abortAll();
   }
+}
+
+// 暂停所有上传
+function abortAll() {
+  controllersMap.forEach((controller, index) => {
+    controller.abort();
+  });
+  controllersMap.clear();
 }
 </script>
 

@@ -25,8 +25,9 @@ const service = axios.create({
  */
 export const uploadPart = async (
   params: UploadPartControllerParams,
-  onTick: (index: number, percent: number) => void,
+  onTick: (index: number, pIndex:number, percent: number) => void,
   index: number,
+  pIndex: number,
   signal: AbortSignal,
 ) => {
   const { part, hash, fileHash, fileName, size } = params;
@@ -43,7 +44,7 @@ export const uploadPart = async (
       onUploadProgress: (progressEvent) => {
         const { loaded, total } = progressEvent;
         const percent = Math.floor((loaded / (total || 0)) * 100);
-        onTick(index, percent);
+        onTick(index, pIndex, percent);
       },
       signal,
     },

@@ -64,7 +64,7 @@ export const uploadController = async (ctx: Context) => {
     await fs.mkdirs(chunkDir, { recursive: true });
   }
 
-  await fs.move(partFile.filepath, path.resolve(chunkDir, hash));
+  await fs.move(partFile.filepath, path.resolve(chunkDir, hash), { overwrite: true });
   ctx.body = {
     code: 2,
     message: "received file chunk",
