@@ -37,7 +37,7 @@ import { inject, onMounted, ref } from "vue";
 import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
-import { FileData, Part } from "@/types/file";
+import { FileData, Part, StoreFileData } from "@/types/file";
 import { uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
 import { splitChunks, uploadParts } from "../utils/file";
@@ -113,10 +113,12 @@ const submitUpload = async () => {
     currentFile.partList = filePartList.map((item, index) => ({
       ...item,
       fileName: fileName,
-      chunkHash: `${fileHash}-${index}`,
+      [HASH_KEY]: `${fileHash}-${index}`,
       fileHash: fileHash,
       index,
     }));
+    // 本地缓存切片数据
+    await fileStorageDB.batchUpdateItem<Part>(STORE_NAME, currentFile.partList);
   }
   // 5.上传切片数据
   await uploadParts(

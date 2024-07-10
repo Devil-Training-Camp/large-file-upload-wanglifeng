@@ -76,6 +76,28 @@ class fileStorageDBService {
     });
   }
 
+  // 批量添加/修改 数据
+  async batchUpdateItem<T = any>(storeName: string, dataList: T[]) {
+    return new Promise((resolve, reject) => {
+      // 添加数据通过事务来添加，事务是在数据库对象上
+      const transaction = this.db!.transaction([storeName], "readwrite");
+      const store = transaction.objectStore(storeName);
+      
+      dataList.forEach(data => {
+        // put可以新增和修改  add 只是新增
+        const request = store.put({ ...data, updateTime: +new Date() });
+        request.onerror = (event: any) => {
+          console.log("数据写入失败");
+          reject(event);
+        };
+      })
+
+      transaction.oncomplete = () => {
+        resolve(true);
+      }
+    })
+  }
+
   async getAllDatas(storeName: string) {
     const store = this.db!.transaction([storeName]).objectStore(storeName);
     const request = store.getAll();

@@ -1,3 +1,5 @@
+import { HASH_KEY } from "@/const";
+
 // 上传文件参数
 export interface FileData {
   // 文件内容
@@ -14,7 +16,7 @@ export interface FileData {
   uploadPercentage: number;
 }
 
-// 切片类
+// 切片数据
 export interface Part {
   // 文件hash
   fileHash?:string;
@@ -23,7 +25,9 @@ export interface Part {
   // 切片
   chunk: Blob;
   // 切片hash
-  hash?: string;
+  [HASH_KEY]: string;
+  // 切片索引
+  index?:number;
   // 上传进度
   percentage?: number;
 }
