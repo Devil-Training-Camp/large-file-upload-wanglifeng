@@ -37,7 +37,7 @@ import { inject, onMounted, ref } from "vue";
 import { CHUNK_SIZE, HASH_KEY, STORE_NAME } from "@/const";
 import { ElMessage, ElUpload } from "element-plus";
 import FileItem from "@/components/FileItem.vue";
-import { FileData, Part, StoreFileData } from "@/types/file";
+import { FileData, Part } from "@/types/file";
 import { uploadPart, verify } from "@/service/file";
 import Scheduler from "../utils/scheduler";
 import { splitChunks, uploadParts } from "../utils/file";
@@ -50,7 +50,7 @@ const upload = ref<boolean>(true); // 判断是否可以暂停
 const controllersMap = new Map<number, AbortController>();
 
 const fileStorageDB: fileStorageDBService = inject(
-  "fileStorageDB",
+  "fileStorageDB"
 ) as fileStorageDBService;
 
 onMounted(async () => {
@@ -59,6 +59,39 @@ onMounted(async () => {
     [STORE_NAME]: {
       indexs: [HASH_KEY],
     },
+  });
+
+  // 获取本地存储的所有切片数据
+  const storePartData = await fileStorageDB.getAllDatas<Part>(STORE_NAME);
+
+  // 对切片数据进行分组
+  const fileGroup: Record<string, Part[]> = storePartData.reduce(
+    (groups: Record<string, Part[]>, item) => {
+      const fileHash = item.fileHash!;
+      if (!groups[fileHash]) {
+        groups[fileHash] = [];
+      }
+      groups[fileHash].push(item);
+      return groups;
+    },
+    {}
+  );
+
+  // 根据切片数据生成本地保存的文件列表
+  Object.keys(fileGroup).forEach((item) => {
+    const partArr = fileGroup[item];
+    const uploadedCount = partArr.filter((p) => p.uploaded).length;
+    const uploadPercentage = Number(
+      ((uploadedCount / partArr.length) * 100).toFixed(0)
+    );
+    
+    fileList.value.push({
+      partList: partArr,
+      fileHash: item,
+      name: "",
+      uploadPercentage: uploadPercentage,
+      size: 0,
+    });
   });
 });
 
@@ -125,7 +158,7 @@ const submitUpload = async () => {
     {
       fileArr: fileList.value,
     },
-    controllersMap,
+    controllersMap
   );
 };
 
@@ -145,7 +178,7 @@ async function handlePause() {
         fileHash: currentFile.fileHash!,
       });
       const newParts = currentFile.partList!.filter((item) => {
-        return !uploadedList.includes(item.hash || "");
+        return !uploadedList.includes(item.hashKey || "");
       });
       currentFile.partList = newParts;
 
@@ -159,7 +192,7 @@ async function handlePause() {
           {
             fileArr: fileList.value,
           },
-          controllersMap,
+          controllersMap
         );
       }
     }

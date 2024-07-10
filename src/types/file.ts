@@ -19,17 +19,17 @@ export interface FileData {
 // 切片数据
 export interface Part {
   // 文件hash
-  fileHash?:string;
+  fileHash?: string;
   // 切片大小
   size: number;
   // 切片
   chunk: Blob;
   // 切片hash
-  [HASH_KEY]: string;
+  [HASH_KEY]?: string;
   // 切片索引
-  index?:number;
-  // 上传进度
-  percentage?: number;
+  index?: number;
+  // 上传状态
+  uploaded?: boolean;
 }
 
 export interface UploadPartParams {

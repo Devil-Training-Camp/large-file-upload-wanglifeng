@@ -43,8 +43,8 @@ export const uploadParts = async (
     for (let j = 0; j < partList.length; j++) {
       const { chunk } = partList[j];
 
-      let pHash = partList[j].hash
-        ? (partList[j].hash as string)
+      let pHash = partList[j].hashKey
+        ? (partList[j].hashKey as string)
         : `${fileArr[i].fileHash}-${partList.indexOf(partList[j])}`;
 
       const params = {

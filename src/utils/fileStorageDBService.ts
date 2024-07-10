@@ -82,7 +82,7 @@ class fileStorageDBService {
       // 添加数据通过事务来添加，事务是在数据库对象上
       const transaction = this.db!.transaction([storeName], "readwrite");
       const store = transaction.objectStore(storeName);
-      
+
       dataList.forEach(data => {
         // put可以新增和修改  add 只是新增
         const request = store.put({ ...data, updateTime: +new Date() });
@@ -98,7 +98,7 @@ class fileStorageDBService {
     })
   }
 
-  async getAllDatas(storeName: string) {
+  async getAllDatas<T = any>(storeName: string):Promise<T[]> {
     const store = this.db!.transaction([storeName]).objectStore(storeName);
     const request = store.getAll();
     return new Promise((resolve, reject) => {
