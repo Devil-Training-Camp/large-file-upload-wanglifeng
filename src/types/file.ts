@@ -18,6 +18,8 @@ export interface FileData {
 
 // 切片数据
 export interface Part {
+  // 文件名称
+  fileName:string;
   // 文件hash
   fileHash?: string;
   // 切片大小

@@ -84,13 +84,13 @@ onMounted(async () => {
     const uploadPercentage = Number(
       ((uploadedCount / partArr.length) * 100).toFixed(0)
     );
-    
+
     fileList.value.push({
       partList: partArr,
       fileHash: item,
-      name: "",
+      name: partArr.find(v => v.fileName)?.fileName || "",
       uploadPercentage: uploadPercentage,
-      size: 0,
+      size: partArr.find(v => v.size)?.size || 0,
     });
   });
 });
