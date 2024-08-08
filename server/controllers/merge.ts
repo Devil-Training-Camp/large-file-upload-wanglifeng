@@ -35,6 +35,7 @@ export const mergePart = async (
   // 并发写入文件
   await Promise.all(
     chunkPaths.map((chunkPath, index) =>
+      // 这个改动很好，超出预期了
       pipeline(
         // 指定位置创建可写流
         fs.createReadStream(path.resolve(chunkDir, chunkPath)),

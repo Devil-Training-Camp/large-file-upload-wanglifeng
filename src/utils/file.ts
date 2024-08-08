@@ -36,8 +36,11 @@ export const uploadParts = async (
   controllersMap: Map<number, AbortController>,
 ) => {
   // 1.定义任务调度器
+  // 一次性会传入多个文件？
   const scheduler = new Scheduler(limit);
   // 2.遍历切片列表，将切片上传任务添加到任务调度
+  // 后续一定要警惕这种多重循环场景，一般都有性能问题
+  // 你这个场景还比较合理
   for (let i = 0; i < fileArr.length; i++) {
     const partList = fileArr[i].partList!;
     for (let j = 0; j < partList.length; j++) {
@@ -56,6 +59,7 @@ export const uploadParts = async (
       } as UploadPartControllerParams;
 
       const controller = new AbortController();
+      // 用下标 j 来索引？不太靠谱吧？为啥不直接用前面计算出来的 pHash
       controllersMap.set(j, controller);
       const { signal } = controller;
 
