@@ -19,6 +19,8 @@ export const UPLOAD_DIR = path.resolve(__dirname, "..", "target");
  * @param {string} 文件名称 filename
  * @return {*}
  */
+// 虽然关系不大，不过从最终使用角度看，这个函数跟直接调用 path.extname 的效果一模一样
+// 业务系统中就不必做这种无意义的封装了
 export const extractExt = (filename: string): string => path.extname(filename);
 
 /**

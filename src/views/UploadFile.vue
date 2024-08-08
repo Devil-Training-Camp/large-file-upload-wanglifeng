@@ -146,6 +146,7 @@ const submitUpload = async () => {
     currentFile.partList = filePartList.map((item, index) => ({
       ...item,
       fileName: fileName,
+      // 有点没想明白，下面这个属性名为什么是 `HASH_KEY`?
       [HASH_KEY]: `${fileHash}-${index}`,
       fileHash: fileHash,
       index,
@@ -209,6 +210,8 @@ function abortAll() {
   });
   controllersMap.clear();
 }
+
+// uploadParts 抽出去了，good
 </script>
 
 <style lang="less" scoped>

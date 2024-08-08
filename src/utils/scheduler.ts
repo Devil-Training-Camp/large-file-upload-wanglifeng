@@ -73,6 +73,7 @@ class Scheduler {
     });
   }
   done() {
+    // 这个改动也很合理，改了一个 bug 了
     return this.run().then((res) => ({
       status: this.status,
       res,
