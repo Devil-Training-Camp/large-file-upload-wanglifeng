@@ -15,13 +15,6 @@ export const isValidString = (s) => typeof s === "string" && s.length > 0;
 export const UPLOAD_DIR = path.resolve(__dirname, "..", "target");
 
 /**
- * @description: 获取文件后缀名
- * @param {string} 文件名称 filename
- * @return {*}
- */
-export const extractExt = (filename: string): string => path.extname(filename);
-
-/**
  * @description: 创建临时文件夹用于临时存储 chunk
  * @param {string} 文件 fileHash 值
  * @return {*}

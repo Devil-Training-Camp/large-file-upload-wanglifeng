@@ -2,7 +2,6 @@ import { type Context } from "koa";
 import {
   CHUNK_SIZE,
   UPLOAD_DIR,
-  extractExt,
   isValidString,
   getChunkDir,
 } from "../utils";
@@ -58,7 +57,7 @@ export const mergeController = async (ctx: Context) => {
     throw new HttpError(HttpStatus.PARAM_ERROR, "fileHash 不能为空");
   }
 
-  const ext = extractExt(fileName);
+  const ext = path.extname(fileName);
   const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
   await mergePart(filePath, fileHash, size);
   ctx.body = {

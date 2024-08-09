@@ -4,7 +4,6 @@ import path from "path";
 import fs from "fs-extra";
 import { HttpError, HttpStatus } from "../utils/http-error";
 import {
-  extractExt,
   getUploadedList,
   isValidString,
   UPLOAD_DIR,
@@ -26,7 +25,7 @@ export const verifyController = async (ctx: Context) => {
 
   let needUpload = true;
   let msg = "文件不存在，需要上传";
-  const ext = extractExt(fileName);
+  const ext = path.extname(fileName);
   const filePath = path.resolve(UPLOAD_DIR, `${fileHash}${ext}`);
   if (fs.existsSync(filePath)) {
     needUpload = false;

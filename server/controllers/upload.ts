@@ -1,5 +1,5 @@
 import { type Context } from "koa";
-import { extractExt, getChunkDir, isValidString, UPLOAD_DIR } from "../utils";
+import { getChunkDir, isValidString, UPLOAD_DIR } from "../utils";
 import { HttpError, HttpStatus } from "../utils/http-error";
 import type {
   UploadPartControllerParams,
@@ -32,7 +32,7 @@ export const uploadController = async (ctx: Context) => {
   // 获取文件路径 path.resolve 将相对路径解析为绝对路径
   const filePath = path.resolve(
     UPLOAD_DIR,
-    `${params.fileHash!}${extractExt(params.fileName!)}`,
+    `${params.fileHash!}${path.extname(params.fileName!)}`,
   );
   // 获取切片文件夹
   const chunkDir = getChunkDir(params.fileHash!);
