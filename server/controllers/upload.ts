@@ -9,6 +9,7 @@ import path from "path";
 import fs from "fs-extra";
 
 export const uploadController = async (ctx: Context) => {
+  debugger;
   const { fileName, fileHash, hash, size } = ctx.request
     .body as UploadPartControllerParams;
   const partFile = ctx.request.files?.part;
