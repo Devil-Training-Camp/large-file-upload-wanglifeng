@@ -47,7 +47,7 @@ import { fileStorageDBService } from "@/utils/fileStorageDBService";
 const fileList = ref<FileData[]>([]); // 上传文件列表
 const upload = ref<boolean>(true); // 判断是否可以暂停
 // 多文件上传使用切片索引做key，依次将请求放入controllersMap。暂停时统一控制
-const controllersMap = new Map<number, AbortController>();
+const controllersMap = new Map<string, AbortController>();
 
 const fileStorageDB: fileStorageDBService = inject(
   "fileStorageDB"

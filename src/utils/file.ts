@@ -19,6 +19,7 @@ export const splitChunks = (file: any): Part[] => {
   while (current < file.size!) {
     const chunk = file.slice(current, current + CHUNK_SIZE);
     partList.push({
+      fileName:file.name,
       chunk,
       size: chunk.size,
     });
@@ -33,7 +34,7 @@ export const splitChunks = (file: any): Part[] => {
  */
 export const uploadParts = async (
   { fileArr, limit = 3 }: UploadPartParams,
-  controllersMap: Map<number, AbortController>,
+  controllersMap: Map<string, AbortController>,
 ) => {
   // 1.定义任务调度器
   const scheduler = new Scheduler(limit);
@@ -56,7 +57,7 @@ export const uploadParts = async (
       } as UploadPartControllerParams;
 
       const controller = new AbortController();
-      controllersMap.set(j, controller);
+      controllersMap.set(pHash, controller);
       const { signal } = controller;
 
       const taskFn = async () => {
